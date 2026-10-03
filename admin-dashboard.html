@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MaliSafari Admin Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 18px;
+    }
+
+    .header-content {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .logout-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .top-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .refresh-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 11px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .booking-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .booking-id {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .status {
+      padding: 6px 10px;
+      border-radius: 20px;
+      background: #e5e7eb;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .details {
+      line-height: 1.7;
+    }
+
+    .details strong {
+      display: inline-block;
+      min-width: 110px;
+    }
+
+    select {
+      margin-top: 12px;
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 15px;
+      background: white;
+    }
+
+    .empty {
+      background: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 12px;
+      color: #6b7280;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-content">
+    <h1>🛺 MaliSafari Admin</h1>
+
+    <button class="logout-btn" id="logoutButton">
+      Logout
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <div class="top-section">
+    <h2>Bookings</h2>
+
+    <button class="refresh-btn" id="refreshButton">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <div id="message"></div>
+
+  <div id="bookings">
+    <div class="loading">
+      Loading bookings...
+    </div>
+  </div>
+
+</main>
+
+
+<script>
+
+  // ==========================================
+  // SUPABASE CONNECTION
+  // ==========================================
+
+  const SUPABASE_URL =
+    "https://mtblgpkirgwytiylenrg.supabase.co/rest/v1/";
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
+
+
+  const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+
+  // ==========================================
+  // CHECK ADMIN LOGIN
+  // ==========================================
+
+  async function checkLogin() {
+
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "admin.html";
+      return false;
+    }
+
+    return true;
+  }
+
+
+  // ==========================================
+  // LOAD BOOKINGS
+  // ==========================================
+
+  async function loadBookings() {
+
+    const bookingsContainer =
+      document.getElementById("bookings");
+
+    const message =
+      document.getElementById("message");
+
+    bookingsContainer.innerHTML =
+      '<div class="loading">Loading bookings...</div>';
+
+    message.innerHTML = "";
+
+
+    const { data, error } =
+      await supabase
+        .from("bookings")
+        .select("*")
+        .order("created_at", {
+          ascending: false
+        });
+
+
+    if (error) {
+
+      message.innerHTML =
+        '<div class="error">Could not load bookings: ' +
+        error.message +
+        '</div>';
+
+      bookingsContainer.innerHTML = "";
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      bookingsContainer.innerHTML =
+        '<div class="empty">No bookings found.</div>';
+
+      return;
+    }
+
+
+    bookingsContainer.innerHTML = "";
+
+
+    data.forEach(function(booking) {
+
+      const card =
+        document.createElement("div");
+
+      card.className = "booking-card";
+
+
+      const status =
+        booking.status || "pending";
+
+
+      card.innerHTML = `
+
+        <div class="booking-header">
+
+          <div>
+            <strong>Booking</strong>
+
+            <div class="booking-id">
+              ${booking.id || ""}
+            </div>
+          </div>
+
+          <div class="status">
+            ${status}
+          </div>
+
+        </div>
+
+
+        <div class="details">
+
+          <div>
+            <strong>Passenger:</strong>
+            ${booking.passenger_name || ""}
+          </div>
+
+          <div>
+            <strong>Phone:</strong>
+            ${booking.passenger_phone || ""}
+          </div>
+
+          <div>
+            <strong>Pickup:</strong>
+            ${booking.pickup || ""}
+          </div>
+
+          <div>
+            <strong>Destination:</strong>
+            ${booking.destination || ""}
+          </div>
+
+          <div>
+            <strong>Fare:</strong>
+            ${booking.fare || "Not set"}
+          </div>
+
+        </div>
+
+
+        <select
+          onchange="updateStatus('${booking.id}', this.value)"
+        >
+
+          <option value="pending"
+            ${status === "pending" ? "selected" : ""}>
+            Pending
+          </option>
+
+          <option value="accepted"
+            ${status === "accepted" ? "selected" : ""}>
+            Accepted
+          </option>
+
+          <option value="completed"
+            ${status === "completed" ? "selected" : ""}>
+            Completed
+          </option>
+
+          <option value="cancelled"
+            ${status === "cancelled" ? "selected" : ""}>
+            Cancelled
+          </option>
+
+        </select>
+
+      `;
+
+
+      bookingsContainer.appendChild(card);
+
+    });
+
+  }
+
+
+  // ==========================================
+  // UPDATE BOOKING STATUS
+  // ==========================================
+
+  async function updateStatus(id, newStatus) {
+
+    const { error } =
+      await supabase
+        .from("bookings")
+        .update({
+          status: newStatus
+        })
+        .eq("id", id);
+
+
+    if (error) {
+
+      alert(
+        "Could not update booking: " +
+        error.message
+      );
+
+      return;
+    }
+
+
+    loadBookings();
+
+  }
+
+
+  // ==========================================
+  // LOGOUT
+  // ==========================================
+
+  document
+    .getElementById("logoutButton")
+    .addEventListener("click", async function() {
+
+      await supabase.auth.signOut();
+
+      window.location.href = "admin.html";
+
+    });
+
+
+  // ==========================================
+  // REFRESH
+  // ==========================================
+
+  document
+    .getElementById("refreshButton")
+    .addEventListener("click", function() {
+
+      loadBookings();
+
+    });
+
+
+  // ==========================================
+  // START
+  // ==========================================
+
+  async function startDashboard() {
+
+    const loggedIn =
+      await checkLogin();
+
+    if (loggedIn) {
+      loadBookings();
+    }
+
+  }
+
+
+  startDashboard();
+
+</script>
+
+</body>
+</html>
