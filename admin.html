@@ -6,10 +6,7 @@
 
   <title>MaliSafari Admin Login</title>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-    defer>
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * {
@@ -77,6 +74,7 @@
 
     button:disabled {
       opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #message {
@@ -84,7 +82,6 @@
       margin-top: 15px;
       min-height: 20px;
       line-height: 1.5;
-      color: #d00;
     }
   </style>
 </head>
@@ -99,7 +96,7 @@
       Admin Login
     </div>
 
-    <form id="loginForm">
+    <form id="loginForm" novalidate>
 
       <label for="email">Admin Email</label>
 
@@ -132,184 +129,116 @@
   </div>
 
   <script>
+    const SUPABASE_URL =
+      "https://mtblgpkirgwytiylenrg.supabase.co";
 
-    window.addEventListener("load", async function () {
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
 
-      const form =
-        document.getElementById("loginForm");
+    const form = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const button = document.getElementById("loginButton");
+    const message = document.getElementById("message");
 
-      const button =
-        document.getElementById("loginButton");
+    function showMessage(text, color) {
+      message.textContent = text;
+      message.style.color = color;
+    }
 
-      const message =
-        document.getElementById("message");
+    if (!window.supabase) {
+      showMessage(
+        "Supabase could not load. Please refresh the page.",
+        "#d00"
+      );
+    } else {
 
-
-      function showMessage(text, color) {
-        message.textContent = text;
-        message.style.color = color || "#d00";
-      }
-
-
-      // ------------------------------------------
-      // WAIT FOR SUPABASE
-      // ------------------------------------------
-
-      if (!window.supabase) {
-
-        showMessage(
-          "Supabase is not loading. Please refresh the page.",
-          "#d00"
+      const supabaseClient =
+        window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_PUBLISHABLE_KEY
         );
 
-        return;
-      }
+      form.addEventListener("submit", async function(event) {
 
+        event.preventDefault();
+        event.stopImmediatePropagation();
 
-      // ------------------------------------------
-      // SUPABASE CONNECTION
-      // ------------------------------------------
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
 
-      const SUPABASE_URL =
-        "https://mtblgpkirgwytiylenrg.supabase.co";
-
-      const SUPABASE_PUBLISHABLE_KEY =
-        "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
-
-
-      let supabaseClient;
-
-      try {
-
-        supabaseClient =
-          window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_PUBLISHABLE_KEY
-          );
-
-      } catch (error) {
-
-        showMessage(
-          "Supabase setup error: " + error.message,
-          "#d00"
-        );
-
-        return;
-      }
-
-
-      // ------------------------------------------
-      // LOGIN
-      // ------------------------------------------
-
-      form.addEventListener(
-        "submit",
-        async function (event) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const email =
-            document.getElementById("email")
-              .value
-              .trim();
-
-          const password =
-            document.getElementById("password")
-              .value;
-
-
-          if (!email || !password) {
-
-            showMessage(
-              "Please enter your email and password.",
-              "#d00"
-            );
-
-            return;
-          }
-
-
-          button.disabled = true;
-          button.textContent = "Logging in...";
-
+        if (!email || !password) {
           showMessage(
-            "Logging in...",
-            "#555"
+            "Please enter your email and password.",
+            "#d00"
           );
+          return;
+        }
 
+        button.disabled = true;
+        button.textContent = "Logging in...";
 
-          try {
+        showMessage(
+          "Checking login...",
+          "#555"
+        );
 
-            const {
-              data,
-              error
-            } =
-              await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-              });
+        try {
 
+          const result =
+            await supabaseClient.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
 
-            if (error) {
-
-              showMessage(
-                "Login failed: " + error.message,
-                "#d00"
-              );
-
-              button.disabled = false;
-              button.textContent = "Login";
-
-              return;
-            }
-
-
-            if (!data || !data.session) {
-
-              showMessage(
-                "Login failed: No session was created.",
-                "#d00"
-              );
-
-              button.disabled = false;
-              button.textContent = "Login";
-
-              return;
-            }
-
+          if (result.error) {
 
             showMessage(
-              "Login successful. Opening dashboard...",
-              "green"
-            );
-
-
-            setTimeout(function () {
-
-              window.location.href =
-                "admin-dashboard.html";
-
-            }, 700);
-
-          } catch (error) {
-
-            showMessage(
-              "Login error: " + error.message,
+              "Login failed: " + result.error.message,
               "#d00"
             );
 
             button.disabled = false;
             button.textContent = "Login";
 
+            return;
           }
 
+          if (!result.data || !result.data.session) {
+
+            showMessage(
+              "Login failed: No session was created.",
+              "#d00"
+            );
+
+            button.disabled = false;
+            button.textContent = "Login";
+
+            return;
+          }
+
+          showMessage(
+            "Login successful. Opening dashboard...",
+            "green"
+          );
+
+          setTimeout(function() {
+            window.location.href = "admin-dashboard.html";
+          }, 700);
+
+        } catch (error) {
+
+          showMessage(
+            "Login error: " + error.message,
+            "#d00"
+          );
+
+          button.disabled = false;
+          button.textContent = "Login";
         }
-      );
 
-    });
-
+      });
+    }
   </script>
 
 </body>
