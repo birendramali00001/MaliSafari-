@@ -1,10 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>MaliSafari Admin Login</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * {
@@ -14,31 +16,44 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f2f5f7;
+      background: #f2f4f7;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 20px;
     }
 
     .login-box {
-      width: 90%;
-      max-width: 400px;
       background: white;
+      width: 100%;
+      max-width: 400px;
       padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+      box-shadow: 0 5px 25px rgba(0,0,0,0.12);
     }
 
-    h2 {
+    h1 {
       text-align: center;
+      margin: 0 0 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
       margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 7px;
+      font-weight: bold;
     }
 
     input {
       width: 100%;
       padding: 13px;
-      margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
@@ -46,19 +61,26 @@
 
     button {
       width: 100%;
-      padding: 13px;
+      margin-top: 22px;
+      padding: 14px;
       border: none;
       border-radius: 8px;
-      background: #111;
+      background: #111827;
       color: white;
       font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
     }
 
     #message {
       text-align: center;
       margin-top: 15px;
-      color: red;
+      color: #d00;
+      min-height: 20px;
     }
   </style>
 </head>
@@ -66,27 +88,116 @@
 <body>
 
   <div class="login-box">
-    <h2>🚕 MaliSafari Admin</h2>
 
-    <input type="email" id="email" placeholder="Admin Email">
+    <h1>🛺 MaliSafari</h1>
 
-    <input type="password" id="password" placeholder="Password">
+    <div class="subtitle">
+      Admin Login
+    </div>
 
-    <button onclick="login()">Login</button>
+    <form id="loginForm">
 
-    <div id="message"></div>
+      <label for="email">Admin Email</label>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter admin email"
+        required
+      >
+
+      <label for="password">Password</label>
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter password"
+        required
+      >
+
+      <button type="submit" id="loginButton">
+        Login
+      </button>
+
+      <div id="message"></div>
+
+    </form>
+
   </div>
 
+
   <script>
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const message = document.getElementById("message");
 
-      message.textContent = "Logging in...";
+    // ==========================================
+    // MALISAFARI SUPABASE CONNECTION
+    // ==========================================
 
-      // Supabase connection will be added in the next step.
-    }
+    const SUPABASE_URL =
+      "https://mtblgpkirgwytiylenrg.supabase.co/rest/v1/";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
+
+
+    const supabase = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+    // ==========================================
+    // ADMIN LOGIN
+    // ==========================================
+
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const email =
+          document.getElementById("email").value.trim();
+
+        const password =
+          document.getElementById("password").value;
+
+        const button =
+          document.getElementById("loginButton");
+
+        const message =
+          document.getElementById("message");
+
+
+        button.disabled = true;
+        button.textContent = "Logging in...";
+        message.textContent = "";
+
+
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+
+        if (error) {
+
+          message.textContent =
+            "Login failed: " + error.message;
+
+          button.disabled = false;
+          button.textContent = "Login";
+
+          return;
+        }
+
+
+        // Successful login
+        window.location.href =
+          "admin-dashboard.html";
+
+      });
+
   </script>
 
 </body>
