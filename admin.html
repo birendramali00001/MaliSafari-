@@ -6,7 +6,10 @@
 
   <title>MaliSafari Admin Login</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    defer>
+  </script>
 
   <style>
     * {
@@ -79,8 +82,9 @@
     #message {
       text-align: center;
       margin-top: 15px;
-      color: #d00;
       min-height: 20px;
+      line-height: 1.5;
+      color: #d00;
     }
   </style>
 </head>
@@ -103,6 +107,7 @@
         type="email"
         id="email"
         placeholder="Enter admin email"
+        autocomplete="username"
         required
       >
 
@@ -112,6 +117,7 @@
         type="password"
         id="password"
         placeholder="Enter password"
+        autocomplete="current-password"
         required
       >
 
@@ -125,78 +131,184 @@
 
   </div>
 
-
   <script>
 
-    // ==========================================
-    // MALISAFARI SUPABASE CONNECTION
-    // ==========================================
+    window.addEventListener("load", async function () {
 
-    const SUPABASE_URL =
-      "https://mtblgpkirgwytiylenrg.supabase.co";
+      const form =
+        document.getElementById("loginForm");
 
-    const SUPABASE_PUBLISHABLE_KEY =
-      "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
+      const button =
+        document.getElementById("loginButton");
 
-
-    const supabase = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+      const message =
+        document.getElementById("message");
 
 
-    // ==========================================
-    // ADMIN LOGIN
-    // ==========================================
-
-    document
-      .getElementById("loginForm")
-      .addEventListener("submit", async function(event) {
-
-        event.preventDefault();
-        alert("LOGIN BUTTON IS WORKING");
-        const email =
-          document.getElementById("email").value.trim();
-
-        const password =
-          document.getElementById("password").value;
-
-        const button =
-          document.getElementById("loginButton");
-
-        const message =
-          document.getElementById("message");
+      function showMessage(text, color) {
+        message.textContent = text;
+        message.style.color = color || "#d00";
+      }
 
 
-        button.disabled = true;
-        button.textContent = "Logging in...";
-        message.textContent = "";
+      // ------------------------------------------
+      // WAIT FOR SUPABASE
+      // ------------------------------------------
+
+      if (!window.supabase) {
+
+        showMessage(
+          "Supabase is not loading. Please refresh the page.",
+          "#d00"
+        );
+
+        return;
+      }
 
 
-        const { data, error } =
-          await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
+      // ------------------------------------------
+      // SUPABASE CONNECTION
+      // ------------------------------------------
+
+      const SUPABASE_URL =
+        "https://mtblgpkirgwytiylenrg.supabase.co";
+
+      const SUPABASE_PUBLISHABLE_KEY =
+        "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
 
 
-        if (error) {
+      let supabaseClient;
 
-          message.textContent =
-            "Login failed: " + error.message;
+      try {
 
-          button.disabled = false;
-          button.textContent = "Login";
+        supabaseClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY
+          );
 
-          return;
+      } catch (error) {
+
+        showMessage(
+          "Supabase setup error: " + error.message,
+          "#d00"
+        );
+
+        return;
+      }
+
+
+      // ------------------------------------------
+      // LOGIN
+      // ------------------------------------------
+
+      form.addEventListener(
+        "submit",
+        async function (event) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          const email =
+            document.getElementById("email")
+              .value
+              .trim();
+
+          const password =
+            document.getElementById("password")
+              .value;
+
+
+          if (!email || !password) {
+
+            showMessage(
+              "Please enter your email and password.",
+              "#d00"
+            );
+
+            return;
+          }
+
+
+          button.disabled = true;
+          button.textContent = "Logging in...";
+
+          showMessage(
+            "Logging in...",
+            "#555"
+          );
+
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+              });
+
+
+            if (error) {
+
+              showMessage(
+                "Login failed: " + error.message,
+                "#d00"
+              );
+
+              button.disabled = false;
+              button.textContent = "Login";
+
+              return;
+            }
+
+
+            if (!data || !data.session) {
+
+              showMessage(
+                "Login failed: No session was created.",
+                "#d00"
+              );
+
+              button.disabled = false;
+              button.textContent = "Login";
+
+              return;
+            }
+
+
+            showMessage(
+              "Login successful. Opening dashboard...",
+              "green"
+            );
+
+
+            setTimeout(function () {
+
+              window.location.href =
+                "admin-dashboard.html";
+
+            }, 700);
+
+          } catch (error) {
+
+            showMessage(
+              "Login error: " + error.message,
+              "#d00"
+            );
+
+            button.disabled = false;
+            button.textContent = "Login";
+
+          }
+
         }
+      );
 
-
-        // Successful login
-        window.location.href =
-          "admin-dashboard.html";
-
-      });
+    });
 
   </script>
 
