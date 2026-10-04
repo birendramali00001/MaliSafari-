@@ -1,574 +1,347 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>MaliSafari Admin Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>MaliSafari Admin Dashboard</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    header {
-      background: #111827;
-      color: white;
-      padding: 18px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7f5;
+  color: #17201b;
+}
 
-    .header-content {
-      max-width: 1100px;
-      margin: auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
+header {
+  background: #087a45;
+  color: white;
+  padding: 20px;
+}
 
-    header h1 {
-      margin: 0;
-      font-size: 22px;
-    }
+header h1 {
+  margin: 0;
+}
 
-    .logout-btn {
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+main {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
 
-    main {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
-    }
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
 
-    .top-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
+.controls button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-    .refresh-btn {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 11px 16px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+.refresh {
+  background: #087a45;
+  color: white;
+}
 
-    .booking-card {
-      background: white;
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
+.logout {
+  background: #333;
+  color: white;
+}
 
-    .booking-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
+.table-container {
+  background: white;
+  border-radius: 15px;
+  overflow-x: auto;
+  box-shadow: 0 3px 15px rgba(0,0,0,.06);
+}
 
-    .booking-id {
-      font-size: 13px;
-      color: #6b7280;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+}
 
-    .status {
-      padding: 6px 10px;
-      border-radius: 20px;
-      background: #e5e7eb;
-      font-size: 13px;
-      font-weight: bold;
-    }
+th,
+td {
+  padding: 13px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
 
-    .details {
-      line-height: 1.7;
-    }
+th {
+  background: #f0f4f1;
+}
 
-    .details strong {
-      display: inline-block;
-      min-width: 110px;
-    }
+select {
+  padding: 7px;
+  border-radius: 7px;
+  border: 1px solid #ccd5cf;
+}
 
-    select {
-      margin-top: 12px;
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #ccc;
-      border-radius: 7px;
-      font-size: 15px;
-      background: white;
-    }
+.empty {
+  text-align: center;
+  padding: 30px;
+  color: #68756e;
+}
 
-    .empty {
-      background: white;
-      padding: 30px;
-      text-align: center;
-      border-radius: 12px;
-      color: #6b7280;
-    }
+@media(max-width:600px) {
 
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
+  header h1 {
+    font-size: 22px;
+  }
 
-    .loading {
-      text-align: center;
-      padding: 30px;
-    }
-  </style>
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
 </head>
 
 <body>
 
 <header>
-  <div class="header-content">
-    <h1>🛺 MaliSafari Admin</h1>
 
-    <button class="logout-btn" id="logoutButton">
-      Logout
-    </button>
-  </div>
+<h1>🛺 MaliSafari Admin Dashboard</h1>
+
 </header>
 
 <main>
 
-  <div class="top-section">
-    <h2>Bookings</h2>
+<div class="controls">
 
-    <button class="refresh-btn" id="refreshButton">
-      🔄 Refresh
-    </button>
-  </div>
+<button class="refresh" onclick="loadBookings()">
+🔄 Refresh
+</button>
 
-  <div id="message"></div>
+<button class="logout" onclick="logout()">
+Logout
+</button>
 
-  <div id="bookings">
-    <div class="loading">
-      Loading bookings...
-    </div>
-  </div>
+</div>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Time</th>
+<th>Passenger</th>
+<th>Phone</th>
+<th>Pickup</th>
+<th>Destination</th>
+<th>Fare</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody id="bookingRows">
+
+<tr>
+<td colspan="7" class="empty">
+Loading bookings...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
 
 </main>
 
 <script>
 
-  // ==========================================
-  // SUPABASE CONNECTION
-  // ==========================================
+const db = supabase.createClient(
+  MALISAFARI_SUPABASE_URL,
+  MALISAFARI_SUPABASE_KEY
+);
 
-  const SUPABASE_URL =
-    "https://mtblgpkirgwytiylenrg.supabase.co";
+async function checkLogin() {
 
-  const SUPABASE_PUBLISHABLE_KEY =
-    "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
+  const { data } = await db.auth.getSession();
 
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
+  if (!data.session) {
 
+    window.location.href = "admin.html";
+    return;
 
-  // ==========================================
-  // CHECK ADMIN LOGIN
-  // ==========================================
-
-  async function checkLogin() {
-
-    const message = document.getElementById("message");
-
-    try {
-
-      const timeout = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error("Login check timed out after 10 seconds.")
-          );
-        }, 10000);
-      });
-
-      const request = supabase.auth.getSession();
-
-      const result = await Promise.race([
-        request,
-        timeout
-      ]);
-
-      if (!result || !result.data) {
-        throw new Error("Could not check login session.");
-      }
-
-      const session = result.data.session;
-
-      if (!session) {
-        window.location.href = "admin.html";
-        return false;
-      }
-
-      return true;
-
-    } catch (error) {
-
-      console.error("checkLogin error:", error);
-
-      message.innerHTML =
-        '<div class="error">' +
-        "ERROR: " +
-        (error.message || String(error)) +
-        "</div>";
-
-      return false;
-    }
   }
 
+  loadBookings();
 
-  // ==========================================
-  // LOAD BOOKINGS
-  // ==========================================
+}
 
-  async function loadBookings() {
+async function loadBookings() {
 
-    const bookingsContainer =
-      document.getElementById("bookings");
+  const rows = document.getElementById("bookingRows");
 
-    const message =
-      document.getElementById("message");
+  rows.innerHTML = `
+    <tr>
+      <td colspan="7" class="empty">
+        Loading...
+      </td>
+    </tr>
+  `;
 
-    bookingsContainer.innerHTML =
-      '<div class="loading">Loading bookings...</div>';
+  const { data, error } = await db
+    .from("bookings")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-    message.innerHTML = "";
+  if (error) {
 
-    try {
+    console.error(error);
 
-      const timeout = new Promise((_, reject) => {
+    rows.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty">
+          Could not load bookings.
+        </td>
+      </tr>
+    `;
 
-        setTimeout(() => {
+    return;
+  }
 
-          reject(
-            new Error(
-              "Booking request timed out after 10 seconds."
-            )
-          );
+  if (!data || data.length === 0) {
 
-        }, 10000);
+    rows.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty">
+          No bookings yet.
+        </td>
+      </tr>
+    `;
 
-      });
+    return;
 
+  }
 
-      const request =
-        supabase
-          .from("bookings")
-          .select("*")
-          .order("created_at", {
-            ascending: false
-          });
+  rows.innerHTML = data.map(function(booking) {
 
+    const statuses = [
+      "pending",
+      "accepted",
+      "completed",
+      "cancelled"
+    ];
 
-      const result =
-        await Promise.race([
-          request,
-          timeout
-        ]);
+    const options = statuses.map(function(status) {
 
+      return `
+        <option
+          value="${status}"
+          ${booking.status === status ? "selected" : ""}
+        >
+          ${status}
+        </option>
+      `;
 
-      if (result.error) {
-        throw result.error;
-      }
+    }).join("");
 
+    return `
+      <tr>
 
-      const data = result.data;
+        <td>
+          ${new Date(booking.created_at).toLocaleString()}
+        </td>
 
+        <td>
+          ${escapeHTML(booking.passenger_name)}
+        </td>
 
-      if (!data || data.length === 0) {
+        <td>
+          ${escapeHTML(booking.passenger_phone)}
+        </td>
 
-        bookingsContainer.innerHTML =
-          '<div class="empty">' +
-          "No bookings found." +
-          "</div>";
+        <td>
+          ${escapeHTML(booking.pickup)}
+        </td>
 
-        return;
-      }
+        <td>
+          ${escapeHTML(booking.destination)}
+        </td>
 
+        <td>
+          ${booking.fare ?? "—"}
+        </td>
 
-      bookingsContainer.innerHTML = "";
-
-
-      data.forEach(function(booking) {
-
-        const card =
-          document.createElement("div");
-
-        card.className =
-          "booking-card";
-
-
-        const status =
-          booking.status || "pending";
-
-
-        card.innerHTML = `
-
-          <div class="booking-header">
-
-            <div>
-
-              <strong>Booking</strong>
-
-              <div class="booking-id">
-                ${booking.id || ""}
-              </div>
-
-            </div>
-
-            <div class="status">
-              ${status}
-            </div>
-
-          </div>
-
-
-          <div class="details">
-
-            <div>
-              <strong>Passenger:</strong>
-              ${booking.passenger_name || ""}
-            </div>
-
-            <div>
-              <strong>Phone:</strong>
-              ${booking.passenger_phone || ""}
-            </div>
-
-            <div>
-              <strong>Pickup:</strong>
-              ${booking.pickup || ""}
-            </div>
-
-            <div>
-              <strong>Destination:</strong>
-              ${booking.destination || ""}
-            </div>
-
-            <div>
-              <strong>Fare:</strong>
-              ${booking.fare || "Not set"}
-            </div>
-
-          </div>
-
+        <td>
 
           <select
             onchange="updateStatus('${booking.id}', this.value)"
           >
 
-            <option
-              value="pending"
-              ${status === "pending" ? "selected" : ""}
-            >
-              Pending
-            </option>
-
-            <option
-              value="accepted"
-              ${status === "accepted" ? "selected" : ""}
-            >
-              Accepted
-            </option>
-
-            <option
-              value="completed"
-              ${status === "completed" ? "selected" : ""}
-            >
-              Completed
-            </option>
-
-            <option
-              value="cancelled"
-              ${status === "cancelled" ? "selected" : ""}
-            >
-              Cancelled
-            </option>
+            ${options}
 
           </select>
 
-        `;
+        </td>
 
+      </tr>
+    `;
 
-        bookingsContainer.appendChild(card);
+  }).join("");
 
-      });
+}
 
+async function updateStatus(id, status) {
 
-    } catch (error) {
+  const { error } = await db
+    .from("bookings")
+    .update({ status: status })
+    .eq("id", id);
 
-      console.error(
-        "loadBookings error:",
-        error
-      );
+  if (error) {
 
-
-      bookingsContainer.innerHTML =
-        '<div class="error">' +
-        "Could not load bookings." +
-        "</div>";
-
-
-      message.innerHTML =
-        '<div class="error">' +
-        "ERROR: " +
-        (error.message || String(error)) +
-        "</div>";
-
-    }
+    alert("Could not update booking status.");
+    console.error(error);
 
   }
 
+}
 
-  // ==========================================
-  // UPDATE BOOKING STATUS
-  // ==========================================
+async function logout() {
 
-  async function updateStatus(id, newStatus) {
+  await db.auth.signOut();
 
-    try {
+  window.location.href = "admin.html";
 
-      const timeout = new Promise((_, reject) => {
+}
 
-        setTimeout(() => {
+function escapeHTML(value) {
 
-          reject(
-            new Error(
-              "Status update timed out after 10 seconds."
-            )
-          );
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-        }, 10000);
+}
 
-      });
-
-
-      const request =
-        supabase
-          .from("bookings")
-          .update({
-            status: newStatus
-          })
-          .eq("id", id);
-
-
-      const result =
-        await Promise.race([
-          request,
-          timeout
-        ]);
-
-
-      if (result.error) {
-        throw result.error;
-      }
-
-
-      loadBookings();
-
-
-    } catch (error) {
-
-      alert(
-        "Could not update booking: " +
-        (error.message || String(error))
-      );
-
-    }
-
-  }
-
-
-  // ==========================================
-  // LOGOUT
-  // ==========================================
-
-  document
-    .getElementById("logoutButton")
-    .addEventListener(
-      "click",
-      async function() {
-
-        await supabase.auth.signOut();
-
-        window.location.href =
-          "admin.html";
-
-      }
-    );
-
-
-  // ==========================================
-  // REFRESH
-  // ==========================================
-
-  document
-    .getElementById("refreshButton")
-    .addEventListener(
-      "click",
-      async function() {
-
-        await loadBookings();
-
-      }
-    );
-
-
-  // ==========================================
-  // START DASHBOARD
-  // ==========================================
-
-  async function startDashboard() {
-
-    const loggedIn =
-      await checkLogin();
-
-    if (loggedIn) {
-
-      await loadBookings();
-
-    }
-
-  }
-
-
-  startDashboard();
+checkLogin();
 
 </script>
 
 </body>
+
 </html>
