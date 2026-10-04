@@ -1,245 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>MaliSafari Admin Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>MaliSafari Admin Login</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f4f7;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7f5;
+}
 
-    .login-box {
-      background: white;
-      width: 100%;
-      max-width: 400px;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.12);
-    }
+.login-box {
+  width: calc(100% - 30px);
+  max-width: 400px;
+  margin: 80px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0,0,0,.1);
+}
 
-    h1 {
-      text-align: center;
-      margin: 0 0 10px;
-    }
+h1 {
+  text-align: center;
+  color: #087a45;
+}
 
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 25px;
-    }
+input {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  box-sizing: border-box;
+  border: 1px solid #ccd5cf;
+  border-radius: 9px;
+  font-size: 16px;
+}
 
-    label {
-      display: block;
-      margin-top: 15px;
-      margin-bottom: 7px;
-      font-weight: bold;
-    }
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 18px;
+  background: #087a45;
+  color: white;
+  border: 0;
+  border-radius: 9px;
+  font-size: 16px;
+  font-weight: bold;
+}
 
-    input {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
+#error {
+  color: #b00000;
+  margin-top: 12px;
+}
 
-    button {
-      width: 100%;
-      margin-top: 22px;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      background: #111827;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+</style>
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 
-    #message {
-      text-align: center;
-      margin-top: 15px;
-      min-height: 20px;
-      line-height: 1.5;
-    }
-  </style>
 </head>
 
 <body>
 
-  <div class="login-box">
+<div class="login-box">
 
-    <h1>🛺 MaliSafari</h1>
+<h1>🔐 MaliSafari</h1>
 
-    <div class="subtitle">
-      Admin Login
-    </div>
+<p>Admin Login</p>
 
-    <form id="loginForm" novalidate>
+<input
+  id="email"
+  type="email"
+  placeholder="Admin email"
+>
 
-      <label for="email">Admin Email</label>
+<input
+  id="password"
+  type="password"
+  placeholder="Password"
+>
 
-      <input
-        type="email"
-        id="email"
-        placeholder="Enter admin email"
-        autocomplete="username"
-        required
-      >
+<button id="loginButton">
+Login
+</button>
 
-      <label for="password">Password</label>
+<div id="error"></div>
 
-      <input
-        type="password"
-        id="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        required
-      >
+</div>
 
-      <button type="submit" id="loginButton">
-        Login
-      </button>
+<script>
 
-      <div id="message"></div>
+const db = supabase.createClient(
+  MALISAFARI_SUPABASE_URL,
+  MALISAFARI_SUPABASE_KEY
+);
 
-    </form>
+document
+.getElementById("loginButton")
+.addEventListener("click", async function() {
 
-  </div>
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errorBox = document.getElementById("error");
 
-  <script>
-    const SUPABASE_URL =
-      "https://mtblgpkirgwytiylenrg.supabase.co";
+  errorBox.textContent = "";
 
-    const SUPABASE_PUBLISHABLE_KEY =
-      "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
+  if (!email || !password) {
+    errorBox.textContent = "Enter email and password.";
+    return;
+  }
 
-    const form = document.getElementById("loginForm");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const button = document.getElementById("loginButton");
-    const message = document.getElementById("message");
+  const { error } = await db.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
 
-    function showMessage(text, color) {
-      message.textContent = text;
-      message.style.color = color;
-    }
+  if (error) {
 
-    if (!window.supabase) {
-      showMessage(
-        "Supabase could not load. Please refresh the page.",
-        "#d00"
-      );
-    } else {
+    errorBox.textContent = error.message;
 
-      const supabaseClient =
-        window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_PUBLISHABLE_KEY
-        );
+  } else {
 
-      form.addEventListener("submit", async function(event) {
+    window.location.href = "admin-dashboard.html";
 
-        event.preventDefault();
-        event.stopImmediatePropagation();
+  }
 
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
+});
 
-        if (!email || !password) {
-          showMessage(
-            "Please enter your email and password.",
-            "#d00"
-          );
-          return;
-        }
-
-        button.disabled = true;
-        button.textContent = "Logging in...";
-
-        showMessage(
-          "Checking login...",
-          "#555"
-        );
-
-        try {
-
-          const result =
-            await supabaseClient.auth.signInWithPassword({
-              email: email,
-              password: password
-            });
-
-          if (result.error) {
-
-            showMessage(
-              "Login failed: " + result.error.message,
-              "#d00"
-            );
-
-            button.disabled = false;
-            button.textContent = "Login";
-
-            return;
-          }
-
-          if (!result.data || !result.data.session) {
-
-            showMessage(
-              "Login failed: No session was created.",
-              "#d00"
-            );
-
-            button.disabled = false;
-            button.textContent = "Login";
-
-            return;
-          }
-
-          showMessage(
-            "Login successful. Opening dashboard...",
-            "green"
-          );
-
-          setTimeout(function() {
-            window.location.href = "admin-dashboard.html";
-          }, 700);
-
-        } catch (error) {
-
-          showMessage(
-            "Login error: " + error.message,
-            "#d00"
-          );
-
-          button.disabled = false;
-          button.textContent = "Login";
-        }
-
-      });
-    }
-  </script>
+</script>
 
 </body>
 </html>
