@@ -3,144 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MaliSafari - E-Rickshaw Booking</title>
+
+<title>MaliSafari | E-Rickshaw Booking</title>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f4f7f5;color:#1f2937}
-header{background:#0b7a4b;color:white;padding:18px 16px;text-align:center}
-header h1{font-size:30px}
-header p{margin-top:5px;font-size:14px}
-.<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MaliSafari - E-Rickshaw Booking</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f4f7f5;color:#1f2937}
-header{background:#0b7a4b;color:white;padding:18px 16px;text-align:center}
-header h1{font-size:30px}
-header p{margin-top:5px;font-size:14px}
-.container{max-width:520px;margin:20px auto;padding:0 15px}
-.card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-h2{margin-bottom:16px;color:#0b7a4b}
-label{display:block;font-weight:bold;margin:12px 0 6px}
-input,select,button{width:100%;padding:13px;border:1px solid #d1d5db;border-radius:10px;font-size:16px}
-input:focus,select:focus{outline:2px solid #0b7a4b}
-button{margin-top:18px;background:#0b7a4b;color:white;border:none;font-weight:bold;cursor:pointer}
-button:active{transform:scale(.99)}
-.info{margin-top:16px;padding:12px;background:#ecfdf5;border-radius:10px;font-size:14px}
-footer{text-align:center;padding:25px;color:#6b7280;font-size:13px}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7f5;
+  color: #17201b;
+}
+
+header {
+  background: #087a45;
+  color: white;
+  text-align: center;
+  padding: 28px 15px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
+header p {
+  margin: 8px 0 0;
+  font-size: 16px;
+}
+
+.container {
+  max-width: 520px;
+  margin: 25px auto;
+  padding: 0 15px;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0,0,0,.08);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-top: 17px;
+  margin-bottom: 7px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ccd5cf;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 22px;
+  background: #087a45;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+button:disabled {
+  opacity: .6;
+}
+
+.message {
+  margin-top: 15px;
+  padding: 13px;
+  border-radius: 10px;
+  display: none;
+}
+
+.success {
+  display: block;
+  background: #e8f7ee;
+  color: #087a45;
+}
+
+.error {
+  display: block;
+  background: #ffeaea;
+  color: #a30000;
+}
+
+footer {
+  text-align: center;
+  color: #66736c;
+  padding: 25px;
+  font-size: 13px;
+}
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 </head>
+
 <body>
+
 <header>
   <h1>🛺 MaliSafari</h1>
-  <p>Simple & easy e-rickshaw booking</p>
+  <p>Easy E-Rickshaw Booking in Biratnagar</p>
 </header>
 
 <div class="container">
-  <div class="card">
-    <h2>Book Your Ride</h2>
 
-    <label for="name">Your Name</label>
-    <input id="name" type="text" placeholder="Enter your name">
+<div class="card">
 
-    <label for="phone">Phone Number</label>
-    <input id="phone" type="tel" placeholder="98XXXXXXXX">
+<h2>Book Your Ride</h2>
 
-    <label for="pickup">Pickup Point</label>
-    <input id="pickup" type="text" placeholder="Where should we pick you up?">
+<p>Enter your details and request a MaliSafari e-rickshaw.</p>
 
-    <label for="destination">Destination</label>
-    <input id="destination" type="text" placeholder="Where are you going?">
+<form id="bookingForm">
 
-    <button onclick="bookRide()">Request MaliSafari</button>
+<label>Your Name</label>
+<input id="passengerName" required>
 
-    <div class="info">
-      After you request a ride, the booking can later be connected to an online database and admin/driver system.
-    </div>
-  </div>
+<label>Phone Number</label>
+<input id="passengerPhone" type="tel" inputmode="tel" required>
+
+<label>Pickup Point</label>
+<input id="pickup" required>
+
+<label>Destination</label>
+<input id="destination" required>
+
+<button id="bookingButton" type="submit">
+Request MaliSafari
+</button>
+
+</form>
+
+<div id="message" class="message"></div>
+
+</div>
 </div>
 
-<footer>© 2026 MaliSafari • E-Rickshaw Booking</footer>
+<footer>
+MaliSafari • Biratnagar, Nepal
+</footer>
 
 <script>
-function bookRide(){
-  const name=document.getElementById('name').value.trim();
-  const phone=document.getElementById('phone').value.trim();
-  const pickup=document.getElementById('pickup').value.trim();
-  const destination=document.getElementById('destination').value.trim();
 
-  if(!name || !phone || !pickup || !destination){
-    alert('Please fill in all fields.');
-    return;
+const supabaseClient = supabase.createClient(
+  MALISAFARI_SUPABASE_URL,
+  MALISAFARI_SUPABASE_KEY
+);
+
+const form = document.getElementById("bookingForm");
+const button = document.getElementById("bookingButton");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async function(event) {
+
+  event.preventDefault();
+
+  button.disabled = true;
+  button.textContent = "Booking...";
+
+  message.className = "message";
+  message.textContent = "";
+
+  const booking = {
+    passenger_name: document.getElementById("passengerName").value.trim(),
+    passenger_phone: document.getElementById("passengerPhone").value.trim(),
+    pickup: document.getElementById("pickup").value.trim(),
+    destination: document.getElementById("destination").value.trim(),
+    status: "pending"
+  };
+
+  const { error } = await supabaseClient
+    .from("bookings")
+    .insert([booking]);
+
+  if (error) {
+
+    console.error(error);
+
+    message.className = "message error";
+    message.textContent =
+      "Booking could not be submitted. Please try again.";
+
+  } else {
+
+    message.className = "message success";
+    message.textContent =
+      "Booking successful! MaliSafari will contact you shortly.";
+
+    form.reset();
   }
 
-  alert('Ride request received! MaliSafari will contact you about the fare and driver.');
-}
+  button.disabled = false;
+  button.textContent = "Request MaliSafari";
+
+});
+
 </script>
-</body>
-</html>
- auto;padding:0 15px}
-.card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-h2{margin-bottom:16px;color:#0b7a4b}
-label{display:block;font-weight:bold;margin:12px 0 6px}
-input,select,button{width:100%;padding:13px;border:1px solid #d1d5db;border-radius:10px;font-size:16px}
-input:focus,select:focus{outline:2px solid #0b7a4b}
-button{margin-top:18px;background:#0b7a4b;color:white;border:none;font-weight:bold;cursor:pointer}
-button:active{transform:scale(.99)}
-.info{margin-top:16px;padding:12px;background:#ecfdf5;border-radius:10px;font-size:14px}
-footer{text-align:center;padding:25px;color:#6b7280;font-size:13px}
-</style>
-</head>
-<body>
-<header>
-  <h1>🛺 MaliSafari</h1>
-  <p>Simple & easy e-rickshaw booking</p>
-</header>
 
-<div class="container">
-  <div class="card">
-    <h2>Book Your Ride</h2>
-
-    <label for="name">Your Name</label>
-    <input id="name" type="text" placeholder="Enter your name">
-
-    <label for="phone">Phone Number</label>
-    <input id="phone" type="tel" placeholder="98XXXXXXXX">
-
-    <label for="pickup">Pickup Point</label>
-    <input id="pickup" type="text" placeholder="Where should we pick you up?">
-
-    <label for="destination">Destination</label>
-    <input id="destination" type="text" placeholder="Where are you going?">
-
-    <button onclick="bookRide()">Request MaliSafari</button>
-
-    <div class="info">
-      After you request a ride, the booking can later be connected to an online database and admin/driver system.
-    </div>
-  </div>
-</div>
-
-<footer>© 2026 MaliSafari • E-Rickshaw Booking</footer>
-
-<script>
-function bookRide(){
-  const name=document.getElementById('name').value.trim();
-  const phone=document.getElementById('phone').value.trim();
-  const pickup=document.getElementById('pickup').value.trim();
-  const destination=document.getElementById('destination').value.trim();
-
-  if(!name || !phone || !pickup || !destination){
-    alert('Please fill in all fields.');
-    return;
-  }
-
-  alert('Ride request received! MaliSafari will contact you about the fare and driver.');
-}
-</script>
 </body>
 </html>
