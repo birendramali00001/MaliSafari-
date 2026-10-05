@@ -179,16 +179,7 @@ async function checkLogin() {
 
   const { data, error } = await db.auth.getSession();
 
-  if (error) {
-
-    console.error("Session error:", error);
-
-    window.location.href = "admin.html";
-    return;
-
-  }
-
-  if (!data.session) {
+  if (error || !data.session) {
 
     window.location.href = "admin.html";
     return;
@@ -300,7 +291,11 @@ async function loadBookings() {
         <td>
 
           <select
-            onchange="updateStatus('${booking.id}', this.value)"
+            onchange="updateStatus(
+              '${escapeJS(booking.created_at)}',
+              '${escapeJS(booking.passenger_phone)}',
+              this.value
+            )"
           >
 
             ${options}
@@ -317,36 +312,42 @@ async function loadBookings() {
 }
 
 
-async function updateStatus(id, status) {
-
-  console.log("Updating booking:", id);
-  console.log("New status:", status);
+async function updateStatus(createdAt, phone, status) {
 
   const { data, error } = await db
     .from("bookings")
     .update({
       status: status
     })
-    .eq("id", id)
+    .eq("created_at", createdAt)
+    .eq("passenger_phone", phone)
     .select();
 
   if (error) {
 
-    console.error("SUPABASE UPDATE ERROR:", error);
+    console.error("Supabase update error:", error);
 
     alert(
       "Could not update booking status.\n\n" +
       "Message: " + (error.message || "Unknown error") +
       "\n\nCode: " + (error.code || "N/A") +
-      "\n\nDetails: " + (error.details || "N/A") +
-      "\n\nHint: " + (error.hint || "N/A")
+      "\n\nDetails: " + (error.details || "N/A")
     );
 
     return;
 
   }
 
-  console.log("Updated booking successfully:", data);
+  if (!data || data.length === 0) {
+
+    alert(
+      "No booking was updated.\n\n" +
+      "Please refresh the dashboard and try again."
+    );
+
+    return;
+
+  }
 
   alert("Booking status updated successfully!");
 
@@ -355,13 +356,7 @@ async function updateStatus(id, status) {
 
 async function logout() {
 
-  const { error } = await db.auth.signOut();
-
-  if (error) {
-
-    console.error("Logout error:", error);
-
-  }
+  await db.auth.signOut();
 
   window.location.href = "admin.html";
 
@@ -376,6 +371,17 @@ function escapeHTML(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
+}
+
+
+function escapeJS(value) {
+
+  return String(value ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n");
 
 }
 
