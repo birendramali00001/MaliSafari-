@@ -37,14 +37,26 @@ main {
   padding: 0 15px;
 }
 
+section {
+  background: white;
+  border-radius: 15px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.06);
+}
+
+section h2 {
+  margin-top: 0;
+}
+
 .controls {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
 }
 
-.controls button {
-  padding: 11px 16px;
+button {
+  padding: 10px 15px;
   border: 0;
   border-radius: 8px;
   cursor: pointer;
@@ -60,6 +72,31 @@ main {
   color: white;
 }
 
+.add-driver {
+  background: #087a45;
+  color: white;
+}
+
+.driver-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.driver-form input,
+.driver-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccd5cf;
+  border-radius: 8px;
+}
+
+.driver-form button {
+  grid-column: 1 / -1;
+  background: #087a45;
+  color: white;
+}
+
 .table-container {
   background: white;
   border-radius: 15px;
@@ -70,7 +107,7 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1050px;
+  min-width: 850px;
 }
 
 th,
@@ -107,7 +144,6 @@ input {
   border-radius: 7px;
   background: #087a45;
   color: white;
-  cursor: pointer;
 }
 
 .empty {
@@ -116,10 +152,19 @@ input {
   color: #68756e;
 }
 
+.message {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
 @media(max-width:600px) {
 
   header h1 {
     font-size: 22px;
+  }
+
+  .driver-form {
+    grid-template-columns: 1fr;
   }
 
 }
@@ -141,6 +186,8 @@ input {
 
 <main>
 
+<!-- DASHBOARD CONTROLS -->
+
 <div class="controls">
 
 <button class="refresh" onclick="loadBookings()">
@@ -152,6 +199,13 @@ Logout
 </button>
 
 </div>
+
+
+<!-- BOOKINGS -->
+
+<section>
+
+<h2>📋 Bookings</h2>
 
 <div class="table-container">
 
@@ -185,7 +239,109 @@ Loading bookings...
 
 </div>
 
+</section>
+
+
+<!-- DRIVER MANAGEMENT -->
+
+<section>
+
+<h2>🚗 Driver Management</h2>
+
+<form class="driver-form" onsubmit="addDriver(event)">
+
+<input
+  type="text"
+  id="driverName"
+  placeholder="Driver name"
+  required
+>
+
+<input
+  type="tel"
+  id="driverPhone"
+  placeholder="Phone number"
+  required
+>
+
+<input
+  type="text"
+  id="vehicleNumber"
+  placeholder="Vehicle number"
+  required
+>
+
+<input
+  type="text"
+  id="vehicleType"
+  placeholder="Vehicle type"
+  value="E-Rickshaw"
+  required
+>
+
+<select id="driverStatus">
+
+<option value="active">
+Active
+</option>
+
+<option value="inactive">
+Inactive
+</option>
+
+</select>
+
+<button type="submit" class="add-driver">
+➕ Add Driver
+</button>
+
+</form>
+
+<div id="driverMessage" class="message"></div>
+
+</section>
+
+
+<!-- DRIVER LIST -->
+
+<section>
+
+<h2>👨‍✈️ Drivers</h2>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Vehicle Number</th>
+<th>Vehicle Type</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody id="driverRows">
+
+<tr>
+<td colspan="5" class="empty">
+Loading drivers...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
 </main>
+
 
 <script>
 
@@ -194,6 +350,10 @@ const db = supabase.createClient(
   MALISAFARI_SUPABASE_KEY
 );
 
+
+/* =========================
+   LOGIN CHECK
+========================= */
 
 async function checkLogin() {
 
@@ -207,9 +367,14 @@ async function checkLogin() {
   }
 
   loadBookings();
+  loadDrivers();
 
 }
 
+
+/* =========================
+   LOAD BOOKINGS
+========================= */
 
 async function loadBookings() {
 
@@ -281,6 +446,12 @@ async function loadBookings() {
     }).join("");
 
 
+    const fareId = safeId(
+      booking.created_at,
+      booking.passenger_phone
+    );
+
+
     return `
       <tr>
 
@@ -313,7 +484,7 @@ async function loadBookings() {
               type="number"
               min="0"
               step="1"
-              id="fare-${safeId(booking.created_at, booking.passenger_phone)}"
+              id="fare-${fareId}"
               value="${booking.fare ?? ""}"
               placeholder="Rs."
             >
@@ -323,7 +494,7 @@ async function loadBookings() {
               onclick="saveFare(
                 '${escapeJS(booking.created_at)}',
                 '${escapeJS(booking.passenger_phone)}',
-                'fare-${safeId(booking.created_at, booking.passenger_phone)}'
+                'fare-${fareId}'
               )"
             >
               Save
@@ -357,6 +528,10 @@ async function loadBookings() {
 }
 
 
+/* =========================
+   UPDATE BOOKING STATUS
+========================= */
+
 async function updateStatus(createdAt, phone, status) {
 
   const { data, error } = await db
@@ -370,7 +545,7 @@ async function updateStatus(createdAt, phone, status) {
 
   if (error) {
 
-    console.error("Supabase status update error:", error);
+    console.error("Status update error:", error);
 
     alert(
       "Could not update booking status.\n\n" +
@@ -395,6 +570,10 @@ async function updateStatus(createdAt, phone, status) {
 
 }
 
+
+/* =========================
+   SAVE FARE
+========================= */
 
 async function saveFare(createdAt, phone, inputId) {
 
@@ -438,7 +617,7 @@ async function saveFare(createdAt, phone, inputId) {
 
   if (error) {
 
-    console.error("Supabase fare update error:", error);
+    console.error("Fare update error:", error);
 
     alert(
       "Could not save fare.\n\n" +
@@ -466,6 +645,255 @@ async function saveFare(createdAt, phone, inputId) {
 }
 
 
+/* =========================
+   ADD DRIVER
+========================= */
+
+async function addDriver(event) {
+
+  event.preventDefault();
+
+  const message = document.getElementById("driverMessage");
+
+  message.textContent = "Adding driver...";
+
+
+  const name =
+    document.getElementById("driverName").value.trim();
+
+  const phone =
+    document.getElementById("driverPhone").value.trim();
+
+  const vehicleNumber =
+    document.getElementById("vehicleNumber").value.trim();
+
+  const vehicleType =
+    document.getElementById("vehicleType").value.trim();
+
+  const status =
+    document.getElementById("driverStatus").value;
+
+
+  if (!name || !phone || !vehicleNumber || !vehicleType) {
+
+    message.textContent = "Please fill all driver details.";
+    return;
+
+  }
+
+
+  const { data, error } = await db
+    .from("drivers")
+    .insert({
+      name: name,
+      phone: phone,
+      vehicle_number: vehicleNumber,
+      vehicle_type: vehicleType,
+      status: status
+    })
+    .select();
+
+
+  if (error) {
+
+    console.error("Add driver error:", error);
+
+    message.textContent =
+      "Could not add driver: " +
+      (error.message || "Unknown error");
+
+    return;
+
+  }
+
+
+  message.textContent = "Driver added successfully!";
+
+  document.getElementById("driverName").value = "";
+  document.getElementById("driverPhone").value = "";
+  document.getElementById("vehicleNumber").value = "";
+
+  document.getElementById("vehicleType").value =
+    "E-Rickshaw";
+
+  document.getElementById("driverStatus").value =
+    "active";
+
+
+  loadDrivers();
+
+}
+
+
+/* =========================
+   LOAD DRIVERS
+========================= */
+
+async function loadDrivers() {
+
+  const rows =
+    document.getElementById("driverRows");
+
+
+  rows.innerHTML = `
+    <tr>
+      <td colspan="5" class="empty">
+        Loading drivers...
+      </td>
+    </tr>
+  `;
+
+
+  const { data, error } = await db
+    .from("drivers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+
+  if (error) {
+
+    console.error("Load drivers error:", error);
+
+    rows.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty">
+          Could not load drivers.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    rows.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty">
+          No drivers added yet.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  rows.innerHTML = data.map(function(driver) {
+
+    return `
+      <tr>
+
+        <td>
+          ${escapeHTML(driver.name)}
+        </td>
+
+        <td>
+          ${escapeHTML(driver.phone)}
+        </td>
+
+        <td>
+          ${escapeHTML(driver.vehicle_number)}
+        </td>
+
+        <td>
+          ${escapeHTML(driver.vehicle_type)}
+        </td>
+
+        <td>
+
+          <select
+            onchange="updateDriverStatus(
+              '${escapeJS(driver.created_at)}',
+              '${escapeJS(driver.phone)}',
+              this.value
+            )"
+          >
+
+            <option
+              value="active"
+              ${driver.status === "active" ? "selected" : ""}
+            >
+              Active
+            </option>
+
+            <option
+              value="inactive"
+              ${driver.status === "inactive" ? "selected" : ""}
+            >
+              Inactive
+            </option>
+
+          </select>
+
+        </td>
+
+      </tr>
+    `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+   UPDATE DRIVER STATUS
+========================= */
+
+async function updateDriverStatus(
+  createdAt,
+  phone,
+  status
+) {
+
+  const { data, error } = await db
+    .from("drivers")
+    .update({
+      status: status
+    })
+    .eq("created_at", createdAt)
+    .eq("phone", phone)
+    .select();
+
+
+  if (error) {
+
+    console.error(
+      "Driver status update error:",
+      error
+    );
+
+    alert(
+      "Could not update driver status.\n\n" +
+      "Message: " +
+      (error.message || "Unknown error")
+    );
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    alert("No driver was updated.");
+    return;
+
+  }
+
+
+  alert("Driver status updated successfully!");
+
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
 async function logout() {
 
   await db.auth.signOut();
@@ -474,6 +902,10 @@ async function logout() {
 
 }
 
+
+/* =========================
+   SECURITY HELPERS
+========================= */
 
 function escapeHTML(value) {
 
@@ -506,6 +938,10 @@ function safeId(value1, value2) {
 
 }
 
+
+/* =========================
+   START
+========================= */
 
 checkLogin();
 
