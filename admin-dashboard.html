@@ -174,9 +174,19 @@ const db = supabase.createClient(
   MALISAFARI_SUPABASE_KEY
 );
 
+
 async function checkLogin() {
 
-  const { data } = await db.auth.getSession();
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
+
+    console.error("Session error:", error);
+
+    window.location.href = "admin.html";
+    return;
+
+  }
 
   if (!data.session) {
 
@@ -188,6 +198,7 @@ async function checkLogin() {
   loadBookings();
 
 }
+
 
 async function loadBookings() {
 
@@ -208,7 +219,7 @@ async function loadBookings() {
 
   if (error) {
 
-    console.error(error);
+    console.error("Load bookings error:", error);
 
     rows.innerHTML = `
       <tr>
@@ -235,6 +246,7 @@ async function loadBookings() {
 
   }
 
+
   rows.innerHTML = data.map(function(booking) {
 
     const statuses = [
@@ -256,6 +268,7 @@ async function loadBookings() {
       `;
 
     }).join("");
+
 
     return `
       <tr>
@@ -303,29 +316,57 @@ async function loadBookings() {
 
 }
 
+
 async function updateStatus(id, status) {
 
-  const { error } = await db
+  console.log("Updating booking:", id);
+  console.log("New status:", status);
+
+  const { data, error } = await db
     .from("bookings")
-    .update({ status: status })
-    .eq("id", id);
+    .update({
+      status: status
+    })
+    .eq("id", id)
+    .select();
 
   if (error) {
 
-    alert("Could not update booking status.");
-    console.error(error);
+    console.error("SUPABASE UPDATE ERROR:", error);
+
+    alert(
+      "Could not update booking status.\n\n" +
+      "Message: " + (error.message || "Unknown error") +
+      "\n\nCode: " + (error.code || "N/A") +
+      "\n\nDetails: " + (error.details || "N/A") +
+      "\n\nHint: " + (error.hint || "N/A")
+    );
+
+    return;
 
   }
 
+  console.log("Updated booking successfully:", data);
+
+  alert("Booking status updated successfully!");
+
 }
+
 
 async function logout() {
 
-  await db.auth.signOut();
+  const { error } = await db.auth.signOut();
+
+  if (error) {
+
+    console.error("Logout error:", error);
+
+  }
 
   window.location.href = "admin.html";
 
 }
+
 
 function escapeHTML(value) {
 
@@ -337,6 +378,7 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 
 }
+
 
 checkLogin();
 
