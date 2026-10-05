@@ -70,7 +70,7 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 850px;
+  min-width: 1050px;
 }
 
 th,
@@ -84,10 +84,30 @@ th {
   background: #f0f4f1;
 }
 
-select {
-  padding: 7px;
+select,
+input {
+  padding: 8px;
   border-radius: 7px;
   border: 1px solid #ccd5cf;
+}
+
+.fare-box {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.fare-input {
+  width: 90px;
+}
+
+.save-fare {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: #087a45;
+  color: white;
+  cursor: pointer;
 }
 
 .empty {
@@ -285,7 +305,32 @@ async function loadBookings() {
         </td>
 
         <td>
-          ${booking.fare ?? "—"}
+
+          <div class="fare-box">
+
+            <input
+              class="fare-input"
+              type="number"
+              min="0"
+              step="1"
+              id="fare-${safeId(booking.created_at, booking.passenger_phone)}"
+              value="${booking.fare ?? ""}"
+              placeholder="Rs."
+            >
+
+            <button
+              class="save-fare"
+              onclick="saveFare(
+                '${escapeJS(booking.created_at)}',
+                '${escapeJS(booking.passenger_phone)}',
+                'fare-${safeId(booking.created_at, booking.passenger_phone)}'
+              )"
+            >
+              Save
+            </button>
+
+          </div>
+
         </td>
 
         <td>
@@ -325,7 +370,7 @@ async function updateStatus(createdAt, phone, status) {
 
   if (error) {
 
-    console.error("Supabase update error:", error);
+    console.error("Supabase status update error:", error);
 
     alert(
       "Could not update booking status.\n\n" +
@@ -340,16 +385,83 @@ async function updateStatus(createdAt, phone, status) {
 
   if (!data || data.length === 0) {
 
-    alert(
-      "No booking was updated.\n\n" +
-      "Please refresh the dashboard and try again."
-    );
+    alert("No booking was updated.");
 
     return;
 
   }
 
   alert("Booking status updated successfully!");
+
+}
+
+
+async function saveFare(createdAt, phone, inputId) {
+
+  const input = document.getElementById(inputId);
+
+  if (!input) {
+
+    alert("Fare input not found.");
+    return;
+
+  }
+
+  const fareValue = input.value.trim();
+
+  if (fareValue === "") {
+
+    alert("Please enter a fare.");
+    return;
+
+  }
+
+  const fare = Number(fareValue);
+
+  if (!Number.isFinite(fare) || fare < 0) {
+
+    alert("Please enter a valid fare.");
+    return;
+
+  }
+
+
+  const { data, error } = await db
+    .from("bookings")
+    .update({
+      fare: fare
+    })
+    .eq("created_at", createdAt)
+    .eq("passenger_phone", phone)
+    .select();
+
+
+  if (error) {
+
+    console.error("Supabase fare update error:", error);
+
+    alert(
+      "Could not save fare.\n\n" +
+      "Message: " + (error.message || "Unknown error") +
+      "\n\nCode: " + (error.code || "N/A") +
+      "\n\nDetails: " + (error.details || "N/A")
+    );
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    alert("No booking was updated.");
+
+    return;
+
+  }
+
+
+  alert("Fare saved successfully!");
 
 }
 
@@ -382,6 +494,15 @@ function escapeJS(value) {
     .replace(/'/g, "\\'")
     .replace(/\r/g, "\\r")
     .replace(/\n/g, "\\n");
+
+}
+
+
+function safeId(value1, value2) {
+
+  return btoa(
+    String(value1) + "|" + String(value2)
+  ).replace(/[^a-zA-Z0-9]/g, "");
 
 }
 
