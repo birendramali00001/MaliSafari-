@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>MaliSafari Admin Dashboard</title>
 
 <style>
-
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -27,9 +21,7 @@ header {
   padding: 20px;
 }
 
-header h1 {
-  margin: 0;
-}
+header h1 { margin: 0; }
 
 main {
   max-width: 1200px;
@@ -45,9 +37,7 @@ section {
   box-shadow: 0 3px 15px rgba(0,0,0,.06);
 }
 
-section h2 {
-  margin-top: 0;
-}
+section h2 { margin-top: 0; }
 
 .controls {
   display: flex;
@@ -62,18 +52,13 @@ button {
   cursor: pointer;
 }
 
-.refresh {
+.refresh, .add-driver {
   background: #087a45;
   color: white;
 }
 
 .logout {
   background: #333;
-  color: white;
-}
-
-.add-driver {
-  background: #087a45;
   color: white;
 }
 
@@ -93,8 +78,6 @@ button {
 
 .driver-form button {
   grid-column: 1 / -1;
-  background: #087a45;
-  color: white;
 }
 
 .table-container {
@@ -107,22 +90,18 @@ button {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 850px;
+  min-width: 1050px;
 }
 
-th,
-td {
+th, td {
   padding: 13px;
   border-bottom: 1px solid #eee;
   text-align: left;
 }
 
-th {
-  background: #f0f4f1;
-}
+th { background: #f0f4f1; }
 
-select,
-input {
+select, input {
   padding: 8px;
   border-radius: 7px;
   border: 1px solid #ccd5cf;
@@ -134,14 +113,10 @@ input {
   align-items: center;
 }
 
-.fare-input {
-  width: 90px;
-}
+.fare-input { width: 90px; }
 
 .save-fare {
   padding: 8px 10px;
-  border: 0;
-  border-radius: 7px;
   background: #087a45;
   color: white;
 }
@@ -157,234 +132,159 @@ input {
   font-weight: bold;
 }
 
-@media(max-width:600px) {
-
-  header h1 {
-    font-size: 22px;
-  }
-
-  .driver-form {
-    grid-template-columns: 1fr;
-  }
-
+.driver-assignment {
+  min-width: 180px;
+  max-width: 240px;
 }
 
+@media(max-width:600px) {
+  header h1 { font-size: 22px; }
+  .driver-form { grid-template-columns: 1fr; }
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-
 </head>
 
 <body>
-
 <header>
-
-<h1>🛺 MaliSafari Admin Dashboard</h1>
-
+  <h1>🛺 MaliSafari Admin Dashboard</h1>
 </header>
 
 <main>
+  <div class="controls">
+    <button class="refresh" onclick="refreshDashboard()">
+      🔄 Refresh
+    </button>
+    <button class="logout" onclick="logout()">
+      Logout
+    </button>
+  </div>
 
-<!-- DASHBOARD CONTROLS -->
+  <!-- BOOKINGS -->
+  <section>
+    <h2>📋 Bookings</h2>
 
-<div class="controls">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Passenger</th>
+            <th>Phone</th>
+            <th>Pickup</th>
+            <th>Destination</th>
+            <th>Fare</th>
+            <th>Status</th>
+            <th>Assigned Driver</th>
+          </tr>
+        </thead>
 
-<button class="refresh" onclick="loadBookings()">
-🔄 Refresh
-</button>
+        <tbody id="bookingRows">
+          <tr>
+            <td colspan="8" class="empty">Loading bookings...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<button class="logout" onclick="logout()">
-Logout
-</button>
+  <!-- ADD DRIVER -->
+  <section>
+    <h2>🚗 Driver Management</h2>
 
-</div>
+    <form class="driver-form" onsubmit="addDriver(event)">
+      <input type="text" id="driverName"
+        placeholder="Driver name" required>
 
+      <input type="tel" id="driverPhone"
+        placeholder="Phone number" required>
 
-<!-- BOOKINGS -->
+      <input type="text" id="vehicleNumber"
+        placeholder="Vehicle number" required>
 
-<section>
+      <input type="text" id="vehicleType"
+        placeholder="Vehicle type"
+        value="E-Rickshaw" required>
 
-<h2>📋 Bookings</h2>
+      <select id="driverStatus">
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
 
-<div class="table-container">
+      <button type="submit" class="add-driver">
+        ➕ Add Driver
+      </button>
+    </form>
 
-<table>
+    <div id="driverMessage" class="message"></div>
+  </section>
 
-<thead>
+  <!-- DRIVER LIST -->
+  <section>
+    <h2>👨‍✈️ Drivers</h2>
 
-<tr>
-<th>Time</th>
-<th>Passenger</th>
-<th>Phone</th>
-<th>Pickup</th>
-<th>Destination</th>
-<th>Fare</th>
-<th>Status</th>
-</tr>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Vehicle Number</th>
+            <th>Vehicle Type</th>
+            <th>Status</th>
+          </tr>
+        </thead>
 
-</thead>
-
-<tbody id="bookingRows">
-
-<tr>
-<td colspan="7" class="empty">
-Loading bookings...
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- DRIVER MANAGEMENT -->
-
-<section>
-
-<h2>🚗 Driver Management</h2>
-
-<form class="driver-form" onsubmit="addDriver(event)">
-
-<input
-  type="text"
-  id="driverName"
-  placeholder="Driver name"
-  required
->
-
-<input
-  type="tel"
-  id="driverPhone"
-  placeholder="Phone number"
-  required
->
-
-<input
-  type="text"
-  id="vehicleNumber"
-  placeholder="Vehicle number"
-  required
->
-
-<input
-  type="text"
-  id="vehicleType"
-  placeholder="Vehicle type"
-  value="E-Rickshaw"
-  required
->
-
-<select id="driverStatus">
-
-<option value="active">
-Active
-</option>
-
-<option value="inactive">
-Inactive
-</option>
-
-</select>
-
-<button type="submit" class="add-driver">
-➕ Add Driver
-</button>
-
-</form>
-
-<div id="driverMessage" class="message"></div>
-
-</section>
-
-
-<!-- DRIVER LIST -->
-
-<section>
-
-<h2>👨‍✈️ Drivers</h2>
-
-<div class="table-container">
-
-<table>
-
-<thead>
-
-<tr>
-<th>Name</th>
-<th>Phone</th>
-<th>Vehicle Number</th>
-<th>Vehicle Type</th>
-<th>Status</th>
-</tr>
-
-</thead>
-
-<tbody id="driverRows">
-
-<tr>
-<td colspan="5" class="empty">
-Loading drivers...
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
+        <tbody id="driverRows">
+          <tr>
+            <td colspan="5" class="empty">Loading drivers...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </main>
 
-
 <script>
-
 const db = supabase.createClient(
   MALISAFARI_SUPABASE_URL,
   MALISAFARI_SUPABASE_KEY
 );
 
+// Stores the drivers loaded from Supabase.
+let activeDrivers = [];
 
-/* =========================
-   LOGIN CHECK
-========================= */
+/* LOGIN CHECK */
 
 async function checkLogin() {
-
   const { data, error } = await db.auth.getSession();
 
   if (error || !data.session) {
-
     window.location.href = "admin.html";
     return;
-
   }
 
-  loadBookings();
-  loadDrivers();
-
+  await loadDrivers();
+  await loadBookings();
 }
 
+/* REFRESH BOTH TABLES */
 
-/* =========================
-   LOAD BOOKINGS
-========================= */
+async function refreshDashboard() {
+  await loadDrivers();
+  await loadBookings();
+}
+
+/* LOAD BOOKINGS */
 
 async function loadBookings() {
-
   const rows = document.getElementById("bookingRows");
 
   rows.innerHTML = `
     <tr>
-      <td colspan="7" class="empty">
-        Loading...
-      </td>
+      <td colspan="8" class="empty">Loading...</td>
     </tr>
   `;
 
@@ -394,98 +294,118 @@ async function loadBookings() {
     .order("created_at", { ascending: false });
 
   if (error) {
-
     console.error("Load bookings error:", error);
 
     rows.innerHTML = `
       <tr>
-        <td colspan="7" class="empty">
+        <td colspan="8" class="empty">
           Could not load bookings.
         </td>
       </tr>
     `;
-
     return;
   }
 
   if (!data || data.length === 0) {
-
     rows.innerHTML = `
       <tr>
-        <td colspan="7" class="empty">
-          No bookings yet.
-        </td>
+        <td colspan="8" class="empty">No bookings yet.</td>
       </tr>
     `;
-
     return;
-
   }
 
+  const statuses = [
+    "pending",
+    "accepted",
+    "completed",
+    "cancelled"
+  ];
 
   rows.innerHTML = data.map(function(booking) {
-
-    const statuses = [
-      "pending",
-      "accepted",
-      "completed",
-      "cancelled"
-    ];
-
     const options = statuses.map(function(status) {
-
       return `
-        <option
-          value="${status}"
-          ${booking.status === status ? "selected" : ""}
-        >
+        <option value="${status}"
+          ${booking.status === status ? "selected" : ""}>
           ${status}
         </option>
       `;
-
     }).join("");
-
 
     const fareId = safeId(
       booking.created_at,
       booking.passenger_phone
     );
 
+    const assignedId = String(booking.driver_id ?? "");
+
+    // Active drivers can be assigned.
+    // An already-assigned inactive driver remains visible
+    // until the admin changes or removes that assignment.
+    const eligibleDrivers = activeDrivers.filter(function(driver) {
+      return driver.status === "active" ||
+        String(driver.id) === assignedId;
+    });
+
+    let driverOptions = `
+      <option value="" ${assignedId === "" ? "selected" : ""}>
+        Unassigned
+      </option>
+    `;
+
+    driverOptions += eligibleDrivers.map(function(driver) {
+      const isSelected = String(driver.id) === assignedId;
+      const inactive = driver.status !== "active";
+
+      const label =
+        escapeHTML(driver.name) +
+        " — " + escapeHTML(driver.vehicle_number || "") +
+        (inactive ? " (Inactive)" : "");
+
+      return `
+        <option value="${escapeHTML(driver.id)}"
+          ${isSelected ? "selected" : ""}>
+          ${label}
+        </option>
+      `;
+    }).join("");
+
+    // Preserve an existing assignment if its driver record
+    // is no longer available in the loaded driver list.
+    if (
+      assignedId &&
+      !activeDrivers.some(function(driver) {
+        return String(driver.id) === assignedId;
+      })
+    ) {
+      driverOptions += `
+        <option value="${escapeHTML(assignedId)}" selected>
+          Previously assigned driver
+        </option>
+      `;
+    }
 
     return `
       <tr>
+        <td>${escapeHTML(new Date(booking.created_at).toLocaleString())}</td>
+
+        <td>${escapeHTML(booking.passenger_name)}</td>
+
+        <td>${escapeHTML(booking.passenger_phone)}</td>
+
+        <td>${escapeHTML(booking.pickup)}</td>
+
+        <td>${escapeHTML(booking.destination)}</td>
 
         <td>
-          ${new Date(booking.created_at).toLocaleString()}
-        </td>
-
-        <td>
-          ${escapeHTML(booking.passenger_name)}
-        </td>
-
-        <td>
-          ${escapeHTML(booking.passenger_phone)}
-        </td>
-
-        <td>
-          ${escapeHTML(booking.pickup)}
-        </td>
-
-        <td>
-          ${escapeHTML(booking.destination)}
-        </td>
-
-        <td>
-
           <div class="fare-box">
-
             <input
               class="fare-input"
               type="number"
               min="0"
               step="1"
               id="fare-${fareId}"
-              value="${booking.fare ?? ""}"
+              value="${escapeHTML(booking.fare ?? "")}"
               placeholder="Rs."
             >
 
@@ -495,194 +415,213 @@ async function loadBookings() {
                 '${escapeJS(booking.created_at)}',
                 '${escapeJS(booking.passenger_phone)}',
                 'fare-${fareId}'
-              )"
-            >
+              )">
               Save
             </button>
-
           </div>
-
         </td>
 
         <td>
-
           <select
             onchange="updateStatus(
               '${escapeJS(booking.created_at)}',
               '${escapeJS(booking.passenger_phone)}',
               this.value
-            )"
-          >
-
+            )">
             ${options}
-
           </select>
-
         </td>
 
+        <td>
+          <select
+            class="driver-assignment"
+            aria-label="Assign driver to booking"
+            onchange="assignDriver(
+              '${escapeJS(booking.created_at)}',
+              '${escapeJS(booking.passenger_phone)}',
+              this.value
+            )">
+            ${driverOptions}
+          </select>
+        </td>
       </tr>
     `;
-
   }).join("");
-
 }
 
+/* ASSIGN OR UNASSIGN DRIVER */
 
-/* =========================
-   UPDATE BOOKING STATUS
-========================= */
+async function assignDriver(createdAt, phone, driverId) {
+  if (driverId !== "") {
+    const driver = activeDrivers.find(function(item) {
+      return String(item.id) === String(driverId);
+    });
 
-async function updateStatus(createdAt, phone, status) {
+    if (!driver) {
+      alert("Driver not found. Please refresh and try again.");
+      await loadBookings();
+      return;
+    }
+
+    if (driver.status !== "active") {
+      alert("Only active drivers can be newly assigned.");
+      await loadBookings();
+      return;
+    }
+  }
+
+  const confirmed = confirm(
+    driverId
+      ? "Assign this driver to the booking?"
+      : "Remove the driver assignment from this booking?"
+  );
+
+  if (!confirmed) {
+    await loadBookings();
+    return;
+  }
 
   const { data, error } = await db
     .from("bookings")
     .update({
-      status: status
+      driver_id: driverId || null
     })
     .eq("created_at", createdAt)
     .eq("passenger_phone", phone)
     .select();
 
   if (error) {
+    console.error("Driver assignment error:", error);
 
+    alert(
+      "Could not save driver assignment.\n\n" +
+      "Message: " + (error.message || "Unknown error") +
+      "\nCode: " + (error.code || "N/A")
+    );
+
+    await loadBookings();
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert(
+      "No booking was updated. Check the Supabase update permissions."
+    );
+
+    await loadBookings();
+    return;
+  }
+
+  alert(
+    driverId
+      ? "Driver assigned successfully!"
+      : "Driver assignment removed successfully!"
+  );
+
+  await loadBookings();
+}
+
+/* UPDATE BOOKING STATUS */
+
+async function updateStatus(createdAt, phone, status) {
+  const { data, error } = await db
+    .from("bookings")
+    .update({ status: status })
+    .eq("created_at", createdAt)
+    .eq("passenger_phone", phone)
+    .select();
+
+  if (error) {
     console.error("Status update error:", error);
 
     alert(
       "Could not update booking status.\n\n" +
       "Message: " + (error.message || "Unknown error") +
-      "\n\nCode: " + (error.code || "N/A") +
-      "\n\nDetails: " + (error.details || "N/A")
+      "\nCode: " + (error.code || "N/A") +
+      "\nDetails: " + (error.details || "N/A")
     );
-
     return;
-
   }
 
   if (!data || data.length === 0) {
-
     alert("No booking was updated.");
-
     return;
-
   }
 
   alert("Booking status updated successfully!");
-
 }
 
-
-/* =========================
-   SAVE FARE
-========================= */
+/* SAVE FARE */
 
 async function saveFare(createdAt, phone, inputId) {
-
   const input = document.getElementById(inputId);
 
   if (!input) {
-
     alert("Fare input not found.");
     return;
-
   }
 
   const fareValue = input.value.trim();
 
   if (fareValue === "") {
-
     alert("Please enter a fare.");
     return;
-
   }
 
   const fare = Number(fareValue);
 
   if (!Number.isFinite(fare) || fare < 0) {
-
     alert("Please enter a valid fare.");
     return;
-
   }
-
 
   const { data, error } = await db
     .from("bookings")
-    .update({
-      fare: fare
-    })
+    .update({ fare: fare })
     .eq("created_at", createdAt)
     .eq("passenger_phone", phone)
     .select();
 
-
   if (error) {
-
     console.error("Fare update error:", error);
 
     alert(
       "Could not save fare.\n\n" +
       "Message: " + (error.message || "Unknown error") +
-      "\n\nCode: " + (error.code || "N/A") +
-      "\n\nDetails: " + (error.details || "N/A")
+      "\nCode: " + (error.code || "N/A") +
+      "\nDetails: " + (error.details || "N/A")
     );
-
     return;
-
   }
-
 
   if (!data || data.length === 0) {
-
     alert("No booking was updated.");
-
     return;
-
   }
 
-
   alert("Fare saved successfully!");
-
 }
 
-
-/* =========================
-   ADD DRIVER
-========================= */
+/* ADD DRIVER */
 
 async function addDriver(event) {
-
   event.preventDefault();
 
   const message = document.getElementById("driverMessage");
-
   message.textContent = "Adding driver...";
 
-
-  const name =
-    document.getElementById("driverName").value.trim();
-
-  const phone =
-    document.getElementById("driverPhone").value.trim();
-
-  const vehicleNumber =
-    document.getElementById("vehicleNumber").value.trim();
-
-  const vehicleType =
-    document.getElementById("vehicleType").value.trim();
-
-  const status =
-    document.getElementById("driverStatus").value;
-
+  const name = document.getElementById("driverName").value.trim();
+  const phone = document.getElementById("driverPhone").value.trim();
+  const vehicleNumber = document.getElementById("vehicleNumber").value.trim();
+  const vehicleType = document.getElementById("vehicleType").value.trim();
+  const status = document.getElementById("driverStatus").value;
 
   if (!name || !phone || !vehicleNumber || !vehicleType) {
-
     message.textContent = "Please fill all driver details.";
     return;
-
   }
 
-
-  const { data, error } = await db
+  const { error } = await db
     .from("drivers")
     .insert({
       name: name,
@@ -690,12 +629,9 @@ async function addDriver(event) {
       vehicle_number: vehicleNumber,
       vehicle_type: vehicleType,
       status: status
-    })
-    .select();
-
+    });
 
   if (error) {
-
     console.error("Add driver error:", error);
 
     message.textContent =
@@ -703,250 +639,157 @@ async function addDriver(event) {
       (error.message || "Unknown error");
 
     return;
-
   }
-
 
   message.textContent = "Driver added successfully!";
 
   document.getElementById("driverName").value = "";
   document.getElementById("driverPhone").value = "";
   document.getElementById("vehicleNumber").value = "";
+  document.getElementById("vehicleType").value = "E-Rickshaw";
+  document.getElementById("driverStatus").value = "active";
 
-  document.getElementById("vehicleType").value =
-    "E-Rickshaw";
-
-  document.getElementById("driverStatus").value =
-    "active";
-
-
-  loadDrivers();
-
+  await loadDrivers();
+  await loadBookings();
 }
 
-
-/* =========================
-   LOAD DRIVERS
-========================= */
+/* LOAD DRIVERS */
 
 async function loadDrivers() {
-
-  const rows =
-    document.getElementById("driverRows");
-
+  const rows = document.getElementById("driverRows");
 
   rows.innerHTML = `
     <tr>
-      <td colspan="5" class="empty">
-        Loading drivers...
-      </td>
+      <td colspan="5" class="empty">Loading drivers...</td>
     </tr>
   `;
-
 
   const { data, error } = await db
     .from("drivers")
     .select("*")
     .order("created_at", { ascending: false });
 
-
   if (error) {
-
     console.error("Load drivers error:", error);
 
     rows.innerHTML = `
       <tr>
-        <td colspan="5" class="empty">
-          Could not load drivers.
-        </td>
+        <td colspan="5" class="empty">Could not load drivers.</td>
       </tr>
     `;
-
     return;
-
   }
 
+  activeDrivers = data || [];
 
-  if (!data || data.length === 0) {
-
+  if (activeDrivers.length === 0) {
     rows.innerHTML = `
       <tr>
-        <td colspan="5" class="empty">
-          No drivers added yet.
-        </td>
+        <td colspan="5" class="empty">No drivers added yet.</td>
       </tr>
     `;
-
     return;
-
   }
 
-
-  rows.innerHTML = data.map(function(driver) {
-
+  rows.innerHTML = activeDrivers.map(function(driver) {
     return `
       <tr>
+        <td>${escapeHTML(driver.name)}</td>
+        <td>${escapeHTML(driver.phone)}</td>
+        <td>${escapeHTML(driver.vehicle_number)}</td>
+        <td>${escapeHTML(driver.vehicle_type)}</td>
 
         <td>
-          ${escapeHTML(driver.name)}
-        </td>
-
-        <td>
-          ${escapeHTML(driver.phone)}
-        </td>
-
-        <td>
-          ${escapeHTML(driver.vehicle_number)}
-        </td>
-
-        <td>
-          ${escapeHTML(driver.vehicle_type)}
-        </td>
-
-        <td>
-
           <select
             onchange="updateDriverStatus(
               '${escapeJS(driver.created_at)}',
               '${escapeJS(driver.phone)}',
               this.value
-            )"
-          >
+            )">
 
-            <option
-              value="active"
-              ${driver.status === "active" ? "selected" : ""}
-            >
+            <option value="active"
+              ${driver.status === "active" ? "selected" : ""}>
               Active
             </option>
 
-            <option
-              value="inactive"
-              ${driver.status === "inactive" ? "selected" : ""}
-            >
+            <option value="inactive"
+              ${driver.status === "inactive" ? "selected" : ""}>
               Inactive
             </option>
-
           </select>
-
         </td>
-
       </tr>
     `;
-
   }).join("");
-
 }
 
+/* UPDATE DRIVER STATUS */
 
-/* =========================
-   UPDATE DRIVER STATUS
-========================= */
-
-async function updateDriverStatus(
-  createdAt,
-  phone,
-  status
-) {
-
+async function updateDriverStatus(createdAt, phone, status) {
   const { data, error } = await db
     .from("drivers")
-    .update({
-      status: status
-    })
+    .update({ status: status })
     .eq("created_at", createdAt)
     .eq("phone", phone)
     .select();
 
-
   if (error) {
-
-    console.error(
-      "Driver status update error:",
-      error
-    );
+    console.error("Driver status update error:", error);
 
     alert(
       "Could not update driver status.\n\n" +
-      "Message: " +
-      (error.message || "Unknown error")
+      "Message: " + (error.message || "Unknown error")
     );
-
     return;
-
   }
-
 
   if (!data || data.length === 0) {
-
     alert("No driver was updated.");
     return;
-
   }
-
 
   alert("Driver status updated successfully!");
 
+  await loadDrivers();
+  await loadBookings();
 }
 
-
-/* =========================
-   LOGOUT
-========================= */
+/* LOGOUT */
 
 async function logout() {
-
   await db.auth.signOut();
-
   window.location.href = "admin.html";
-
 }
 
-
-/* =========================
-   SECURITY HELPERS
-========================= */
+/* SECURITY HELPERS */
 
 function escapeHTML(value) {
-
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
 }
 
-
 function escapeJS(value) {
-
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
     .replace(/'/g, "\\'")
     .replace(/\r/g, "\\r")
     .replace(/\n/g, "\\n");
-
 }
 
-
 function safeId(value1, value2) {
-
   return btoa(
     String(value1) + "|" + String(value2)
   ).replace(/[^a-zA-Z0-9]/g, "");
-
 }
 
-
-/* =========================
-   START
-========================= */
+/* START */
 
 checkLogin();
-
 </script>
 
 </body>
-
 </html>
