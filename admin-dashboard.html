@@ -3,62 +3,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MaliSafari Admin Dashboard</title>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7f5;color:#17201b}
-header{background:#087a45;color:white;padding:20px}
+header{background:#087a45;color:white;padding:18px}
 header h1{margin:0}
-main{max-width:1250px;margin:20px auto;padding:0 15px}
-section{background:white;border-radius:15px;padding:18px;margin-bottom:20px;box-shadow:0 3px 15px #0001}
-section h2{margin-top:0}
-.controls{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
-button{padding:10px 15px;border:0;border-radius:8px;cursor:pointer}
-.refresh,.add-driver,.save-fare{background:#087a45;color:white}
-.logout{background:#333;color:white}
-.driver-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.driver-form input,.driver-form select{width:100%;padding:10px;border:1px solid #ccd5cf;border-radius:8px}
+main{max-width:1300px;margin:20px auto;padding:0 12px}
+section{background:white;border-radius:12px;padding:16px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
+h2{margin-top:0}
+.controls{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
+button{padding:10px;border:0;border-radius:7px;cursor:pointer;background:#087a45;color:white}
+button:disabled{opacity:.5}
+.logout{background:#333}
+input,select{padding:9px;border:1px solid #ccd5cf;border-radius:7px;max-width:100%}
+.driver-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.driver-form input,.driver-form select,.driver-form button{width:100%}
 .driver-form button{grid-column:1/-1}
-.table-container{overflow-x:auto;border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:1100px}
-th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;vertical-align:middle}
+.table-container{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1000px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #eee;vertical-align:middle}
 th{background:#f0f4f1}
-select,input{padding:8px;border-radius:7px;border:1px solid #ccd5cf}
-.fare-box{display:flex;gap:6px;align-items:center}
-.fare-input{width:85px}
-.save-fare{padding:8px 10px}
-.empty{text-align:center;padding:30px;color:#68756e}
-.message{margin-top:10px;font-weight:bold}
-.driver-assignment{min-width:180px}
-@media(max-width:600px){header h1{font-size:22px}.driver-form{grid-template-columns:1fr}}
+.message{padding:10px;background:#e7f2e9;border-radius:8px;overflow-wrap:anywhere;margin-bottom:15px}
+.fare-box{display:flex;gap:5px;align-items:center}
+.fare-input{width:75px}
+.email-input{width:190px}
+.empty{text-align:center;padding:20px;color:#68756e}
+.small{font-size:13px;color:#68756e;line-height:1.5}
+@media(max-width:600px){.driver-form{grid-template-columns:1fr}header h1{font-size:22px}}
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
 </head>
-
 <body>
 <header><h1>🛺 MaliSafari Admin Dashboard</h1></header>
-
 <main>
 <div class="controls">
-  <button class="refresh" onclick="refreshDashboard()">🔄 Refresh</button>
-  <button class="logout" onclick="logout()">Logout</button>
+<button onclick="refreshDashboard()">🔄 Refresh</button>
+<button class="logout" onclick="logout()">Logout</button>
 </div>
+
+<div id="message" class="message">Loading dashboard...</div>
 
 <section>
 <h2>📋 Bookings</h2>
 <div class="table-container">
 <table>
-<thead>
-<tr>
+<thead><tr>
 <th>Time</th><th>Passenger</th><th>Phone</th><th>Pickup</th>
 <th>Destination</th><th>Fare</th><th>Ride Status</th>
 <th>Assigned Driver</th><th>Pickup Time</th><th>Completion Time</th>
-</tr>
-</thead>
+</tr></thead>
 <tbody id="bookingRows">
 <tr><td colspan="10" class="empty">Loading bookings...</td></tr>
 </tbody>
@@ -67,40 +63,38 @@ select,input{padding:8px;border-radius:7px;border:1px solid #ccd5cf}
 </section>
 
 <section>
-<h2>🚗 Driver Management</h2>
-<form class="driver-form" onsubmit="addDriver(event)">
+<h2>➕ Add Driver</h2>
+<p class="small">Add the driver's details here. An email is required for Driver Portal registration. New drivers are not automatically approved for portal access.</p>
+<form id="driverForm" class="driver-form">
 <input id="driverName" placeholder="Driver name" required>
 <input id="driverPhone" type="tel" placeholder="Phone number" required>
 <input id="vehicleNumber" placeholder="Vehicle number" required>
 <input id="vehicleType" placeholder="Vehicle type" value="E-Rickshaw" required>
-
-<select id="driverPhoneType" required>
+<input id="driverEmail" type="email" placeholder="Driver email address">
+<select id="driverPhoneType">
 <option value="normal_phone">Normal Phone</option>
 <option value="smartphone">Smartphone</option>
 </select>
-
-<select id="driverStatus" required>
+<select id="driverStatus">
 <option value="active">Active</option>
 <option value="inactive">Inactive</option>
 </select>
-
-<button type="submit" class="add-driver">➕ Add Driver</button>
+<button type="submit">Add Driver</button>
 </form>
-<div id="driverMessage" class="message"></div>
 </section>
 
 <section>
-<h2>👨‍✈️ Drivers</h2>
+<h2>👨‍✈️ Drivers, Emails and Approvals</h2>
+<p class="small">Save a driver's email and use the approval control to enable or disable Driver Portal access. The driver must also create an account using that same email.</p>
 <div class="table-container">
 <table>
-<thead>
-<tr>
+<thead><tr>
 <th>Name</th><th>Phone</th><th>Vehicle Number</th>
-<th>Vehicle Type</th><th>Phone Type</th><th>Driver Status</th>
-</tr>
-</thead>
+<th>Vehicle Type</th><th>Email</th><th>Phone Type</th>
+<th>Driver Status</th><th>Portal Approval</th><th>Save</th>
+</tr></thead>
 <tbody id="driverRows">
-<tr><td colspan="6" class="empty">Loading drivers...</td></tr>
+<tr><td colspan="9" class="empty">Loading drivers...</td></tr>
 </tbody>
 </table>
 </div>
@@ -114,389 +108,335 @@ const db = supabase.createClient(
 );
 
 let drivers = [];
+let bookings = [];
 
-async function checkLogin(){
-  const {data,error}=await db.auth.getSession();
-  if(error || !data.session){
-    window.location.href="admin.html";
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
+
+function dateText(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleString();
+}
+
+async function checkLogin() {
+  const {data,error} = await db.auth.getSession();
+  if (error || !data.session) {
+    location.href = "admin.html";
     return;
   }
+  await refreshDashboard();
+}
+
+async function refreshDashboard() {
+  message("Refreshing dashboard...");
   await loadDrivers();
   await loadBookings();
+  message("Dashboard refreshed.");
 }
 
-async function refreshDashboard(){
-  await loadDrivers();
-  await loadBookings();
-}
+async function loadDrivers() {
+  const tbody = document.getElementById("driverRows");
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading drivers...</td></tr>';
 
-function statusOptions(current){
-  const statuses=["pending","accepted","picked_up","completed","cancelled"];
-  return statuses.map(s=>`
-    <option value="${s}" ${current===s?"selected":""}>${s.replace("_"," ")}</option>
-  `).join("");
-}
-
-function driverOptions(currentId){
-  let html=`<option value="" ${!currentId?"selected":""}>Unassigned</option>`;
-  const eligible=drivers.filter(d =>
-    d.status==="active" || String(d.id)===String(currentId)
-  );
-
-  html+=eligible.map(d=>`
-    <option value="${escapeHTML(d.id)}"
-      ${String(d.id)===String(currentId)?"selected":""}>
-      ${escapeHTML(d.name)} — ${escapeHTML(d.vehicle_number||"")}
-      ${d.status==="inactive"?" (Inactive)":""}
-    </option>
-  `).join("");
-
-  if(currentId && !drivers.some(d=>String(d.id)===String(currentId))){
-    html+=`<option value="${escapeHTML(currentId)}" selected>Previously assigned driver</option>`;
-  }
-  return html;
-}
-
-async function loadBookings(){
-  const rows=document.getElementById("bookingRows");
-  rows.innerHTML='<tr><td colspan="10" class="empty">Loading...</td></tr>';
-
-  const {data,error}=await db.from("bookings")
+  const {data,error} = await db.from("drivers")
     .select("*").order("created_at",{ascending:false});
 
-  if(error){
+  if (error) {
     console.error(error);
-    rows.innerHTML='<tr><td colspan="10" class="empty">Could not load bookings. Check the connection and permissions.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Could not load drivers: '+esc(error.message)+'</td></tr>';
     return;
   }
 
-  if(!data || !data.length){
-    rows.innerHTML='<tr><td colspan="10" class="empty">No bookings yet.</td></tr>';
+  drivers = data || [];
+
+  if (!drivers.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No drivers added yet.</td></tr>';
     return;
   }
 
-  rows.innerHTML=data.map(b=>{
-    const id=safeId(b.created_at,b.passenger_phone);
-    return `
-      <tr>
-        <td>${escapeHTML(new Date(b.created_at).toLocaleString())}</td>
-        <td>${escapeHTML(b.passenger_name)}</td>
-        <td>${escapeHTML(b.passenger_phone)}</td>
-        <td>${escapeHTML(b.pickup)}</td>
-        <td>${escapeHTML(b.destination)}</td>
-        <td>
-          <div class="fare-box">
-            <input class="fare-input" type="number" min="0" step="1"
-              id="fare-${id}" value="${escapeHTML(b.fare??"")}" placeholder="Rs.">
-            <button class="save-fare" onclick="saveFare(
-              '${escapeJS(b.created_at)}',
-              '${escapeJS(b.passenger_phone)}',
-              'fare-${id}')">Save</button>
-          </div>
-        </td>
-        <td>
-          <select onchange="updateStatus(
-            '${escapeJS(b.created_at)}',
-            '${escapeJS(b.passenger_phone)}',this.value)">
-            ${statusOptions(b.status)}
-          </select>
-        </td>
-        <td>
-          <select class="driver-assignment" onchange="assignDriver(
-            '${escapeJS(b.created_at)}',
-            '${escapeJS(b.passenger_phone)}',this.value)">
-            ${driverOptions(b.driver_id)}
-          </select>
-        </td>
-        <td>${escapeHTML(formatDate(b.picked_up_at))}</td>
-        <td>${escapeHTML(formatDate(b.completed_at))}</td>
-      </tr>`;
-  }).join("");
-}
-
-function formatDate(value){
-  return value ? new Date(value).toLocaleString() : "—";
-}
-
-async function assignDriver(createdAt,phone,driverId){
-  if(driverId){
-    const driver=drivers.find(d=>String(d.id)===String(driverId));
-    if(!driver){
-      alert("Driver not found. Please refresh.");
-      await loadBookings();
-      return;
-    }
-    if(driver.status!=="active" && String(driver.id)!==String(
-      (await findBookingDriverId(createdAt,phone))||""
-    )){
-      alert("Only active drivers can be newly assigned.");
-      await loadBookings();
-      return;
-    }
-  }
-
-  if(!confirm(driverId?"Assign this driver to the booking?":"Remove this driver assignment?")){
-    await loadBookings();
-    return;
-  }
-
-  const {data,error}=await db.from("bookings")
-    .update({driver_id:driverId||null})
-    .eq("created_at",createdAt)
-    .eq("passenger_phone",phone)
-    .select();
-
-  if(error){
-    console.error(error);
-    alert("Could not save driver assignment: "+error.message);
-    await loadBookings();
-    return;
-  }
-  if(!data || !data.length){
-    alert("No booking was updated. Check Supabase permissions.");
-    await loadBookings();
-    return;
-  }
-  alert(driverId?"Driver assigned successfully!":"Driver assignment removed successfully!");
-  await loadBookings();
-}
-
-async function findBookingDriverId(createdAt,phone){
-  const {data}=await db.from("bookings").select("driver_id")
-    .eq("created_at",createdAt).eq("passenger_phone",phone).maybeSingle();
-  return data?.driver_id||"";
-}
-
-async function updateStatus(createdAt,phone,status){
-  const updates={status};
-
-  // Record the time when the admin or driver status workflow
-  // first marks pickup/completion. Do not overwrite an existing time.
-  const {data:oldBooking,error:readError}=await db.from("bookings")
-    .select("picked_up_at,completed_at")
-    .eq("created_at",createdAt)
-    .eq("passenger_phone",phone)
-    .maybeSingle();
-
-  if(readError){
-    alert("Could not check booking timestamps: "+readError.message);
-    return;
-  }
-
-  if(status==="picked_up" && !oldBooking?.picked_up_at){
-    updates.picked_up_at=new Date().toISOString();
-  }
-  if(status==="completed"){
-    if(!oldBooking?.picked_up_at){
-      updates.picked_up_at=new Date().toISOString();
-    }
-    if(!oldBooking?.completed_at){
-      updates.completed_at=new Date().toISOString();
-    }
-  }
-
-  const {data,error}=await db.from("bookings").update(updates)
-    .eq("created_at",createdAt)
-    .eq("passenger_phone",phone)
-    .select();
-
-  if(error){
-    console.error(error);
-    alert("Could not update booking status: "+error.message);
-    await loadBookings();
-    return;
-  }
-  if(!data || !data.length){
-    alert("No booking was updated.");
-    await loadBookings();
-    return;
-  }
-
-  alert("Booking status updated successfully!");
-  await loadBookings();
-}
-
-async function saveFare(createdAt,phone,inputId){
-  const input=document.getElementById(inputId);
-  if(!input || input.value.trim()===""){
-    alert("Please enter a fare.");
-    return;
-  }
-  const fare=Number(input.value);
-  if(!Number.isFinite(fare)||fare<0){
-    alert("Please enter a valid fare.");
-    return;
-  }
-
-  const {data,error}=await db.from("bookings").update({fare})
-    .eq("created_at",createdAt)
-    .eq("passenger_phone",phone)
-    .select();
-
-  if(error){
-    console.error(error);
-    alert("Could not save fare: "+error.message);
-    return;
-  }
-  if(!data || !data.length){
-    alert("No booking was updated.");
-    return;
-  }
-  alert("Fare saved successfully!");
-}
-
-async function addDriver(event){
-  event.preventDefault();
-  const message=document.getElementById("driverMessage");
-  message.textContent="Adding driver...";
-
-  const name=document.getElementById("driverName").value.trim();
-  const phone=document.getElementById("driverPhone").value.trim();
-  const vehicle_number=document.getElementById("vehicleNumber").value.trim();
-  const vehicle_type=document.getElementById("vehicleType").value.trim();
-  const phone_type=document.getElementById("driverPhoneType").value;
-  const status=document.getElementById("driverStatus").value;
-
-  if(!name||!phone||!vehicle_number||!vehicle_type){
-    message.textContent="Please fill all driver details.";
-    return;
-  }
-
-  const {error}=await db.from("drivers").insert({
-    name,phone,vehicle_number,vehicle_type,phone_type,status
-  });
-
-  if(error){
-    console.error(error);
-    message.textContent="Could not add driver: "+error.message;
-    return;
-  }
-
-  message.textContent="Driver added successfully!";
-  document.getElementById("driverName").value="";
-  document.getElementById("driverPhone").value="";
-  document.getElementById("vehicleNumber").value="";
-  document.getElementById("vehicleType").value="E-Rickshaw";
-  document.getElementById("driverPhoneType").value="normal_phone";
-  document.getElementById("driverStatus").value="active";
-
-  await loadDrivers();
-  await loadBookings();
-}
-
-async function loadDrivers(){
-  const rows=document.getElementById("driverRows");
-  rows.innerHTML='<tr><td colspan="6" class="empty">Loading drivers...</td></tr>';
-
-  const {data,error}=await db.from("drivers")
-    .select("*").order("created_at",{ascending:false});
-
-  if(error){
-    console.error(error);
-    rows.innerHTML='<tr><td colspan="6" class="empty">Could not load drivers.</td></tr>';
-    return;
-  }
-
-  drivers=data||[];
-  if(!drivers.length){
-    rows.innerHTML='<tr><td colspan="6" class="empty">No drivers added yet.</td></tr>';
-    return;
-  }
-
-  rows.innerHTML=drivers.map(d=>`
+  tbody.innerHTML = drivers.map(d => `
     <tr>
-      <td>${escapeHTML(d.name)}</td>
-      <td>${escapeHTML(d.phone)}</td>
-      <td>${escapeHTML(d.vehicle_number)}</td>
-      <td>${escapeHTML(d.vehicle_type)}</td>
+      <td>${esc(d.name)}</td>
+      <td>${esc(d.phone)}</td>
+      <td>${esc(d.vehicle_number)}</td>
+      <td>${esc(d.vehicle_type)}</td>
       <td>
-        <select onchange="updateDriverPhoneType(
-          '${escapeJS(d.created_at)}','${escapeJS(d.phone)}',this.value)">
-          <option value="normal_phone" ${(d.phone_type||"normal_phone")==="normal_phone"?"selected":""}>Normal Phone</option>
+        <input class="email-input" type="email"
+          id="email-${esc(d.id)}"
+          value="${esc(d.email || "")}"
+          placeholder="driver@example.com">
+      </td>
+      <td>
+        <select id="phone-type-${esc(d.id)}">
+          <option value="normal_phone" ${d.phone_type==="normal_phone"||!d.phone_type?"selected":""}>Normal Phone</option>
           <option value="smartphone" ${d.phone_type==="smartphone"?"selected":""}>Smartphone</option>
         </select>
       </td>
       <td>
-        <select onchange="updateDriverStatus(
-          '${escapeJS(d.created_at)}','${escapeJS(d.phone)}',this.value)">
+        <select id="status-${esc(d.id)}">
           <option value="active" ${d.status==="active"?"selected":""}>Active</option>
           <option value="inactive" ${d.status==="inactive"?"selected":""}>Inactive</option>
         </select>
+      </td>
+      <td>
+        <select id="approved-${esc(d.id)}">
+          <option value="false" ${d.approved===true?"":"selected"}>Not approved</option>
+          <option value="true" ${d.approved===true?"selected":""}>Approved</option>
+        </select>
+      </td>
+      <td>
+        <button onclick="saveDriver('${esc(d.id)}')">Save</button>
       </td>
     </tr>
   `).join("");
 }
 
-async function updateDriverPhoneType(createdAt,phone,phoneType){
-  const {data,error}=await db.from("drivers")
-    .update({phone_type:phoneType})
-    .eq("created_at",createdAt)
-    .eq("phone",phone)
-    .select();
+async function saveDriver(id) {
+  const email = document.getElementById("email-"+id).value.trim().toLowerCase();
+  const phone_type = document.getElementById("phone-type-"+id).value;
+  const status = document.getElementById("status-"+id).value;
+  const approved = document.getElementById("approved-"+id).value === "true";
 
-  if(error){
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    message("Please enter a valid email address.");
+    return;
+  }
+
+  if (approved && !email) {
+    message("Add the driver's email before approving portal access.");
+    return;
+  }
+
+  const {data,error} = await db.from("drivers")
+    .update({email:email || null,phone_type,status,approved})
+    .eq("id",id)
+    .select("id");
+
+  if (error) {
     console.error(error);
-    alert("Could not update phone type: "+error.message);
-    await loadDrivers();
+    message("Could not save driver: "+error.message);
     return;
   }
-  if(!data || !data.length){
-    alert("No driver was updated.");
-    await loadDrivers();
-    return;
-  }
-  alert("Driver phone type updated successfully!");
-  await loadDrivers();
-}
 
-async function updateDriverStatus(createdAt,phone,status){
-  const {data,error}=await db.from("drivers")
-    .update({status})
-    .eq("created_at",createdAt)
-    .eq("phone",phone)
-    .select();
+  if (!data || !data.length) {
+    message("No driver was updated. Check admin permissions.");
+    return;
+  }
 
-  if(error){
-    console.error(error);
-    alert("Could not update driver status: "+error.message);
-    await loadDrivers();
-    return;
-  }
-  if(!data || !data.length){
-    alert("No driver was updated.");
-    await loadDrivers();
-    return;
-  }
-  alert("Driver status updated successfully!");
+  message("Driver details saved successfully.");
   await loadDrivers();
   await loadBookings();
 }
 
-async function logout(){
-  await db.auth.signOut();
-  window.location.href="admin.html";
+document.getElementById("driverForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const name = document.getElementById("driverName").value.trim();
+  const phone = document.getElementById("driverPhone").value.trim();
+  const vehicle_number = document.getElementById("vehicleNumber").value.trim();
+  const vehicle_type = document.getElementById("vehicleType").value.trim();
+  const email = document.getElementById("driverEmail").value.trim().toLowerCase();
+  const phone_type = document.getElementById("driverPhoneType").value;
+  const status = document.getElementById("driverStatus").value;
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    message("Please enter a valid email address.");
+    return;
+  }
+
+  const {error} = await db.from("drivers").insert({
+    name,phone,vehicle_number,vehicle_type,
+    email:email || null,phone_type,status,approved:false
+  });
+
+  if (error) {
+    console.error(error);
+    message("Could not add driver: "+error.message);
+    return;
+  }
+
+  event.target.reset();
+  document.getElementById("vehicleType").value = "E-Rickshaw";
+  message("Driver added. Portal access remains unapproved until you approve it.");
+  await loadDrivers();
+  await loadBookings();
+});
+
+function driverOptions(currentId) {
+  let html = '<option value="">Unassigned</option>';
+
+  const eligible = drivers.filter(d =>
+    d.status === "active" || String(d.id) === String(currentId)
+  );
+
+  html += eligible.map(d => `
+    <option value="${esc(d.id)}" ${String(d.id)===String(currentId)?"selected":""}>
+      ${esc(d.name)} — ${esc(d.vehicle_number || "")}
+      ${d.status==="inactive"?" (Inactive)":""}
+    </option>
+  `).join("");
+
+  return html;
 }
 
-function escapeHTML(value){
-  return String(value??"")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+async function loadBookings() {
+  const tbody = document.getElementById("bookingRows");
+  tbody.innerHTML = '<tr><td colspan="10" class="empty">Loading bookings...</td></tr>';
+
+  const {data,error} = await db.from("bookings")
+    .select("*").order("created_at",{ascending:false});
+
+  if (error) {
+    console.error(error);
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Could not load bookings: '+esc(error.message)+'</td></tr>';
+    return;
+  }
+
+  bookings = data || [];
+
+  if (!bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">No bookings yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = bookings.map(b => {
+    const id = esc(b.id);
+    const statuses = ["pending","accepted","picked_up","completed","cancelled"];
+    if (b.status && !statuses.includes(b.status)) statuses.push(b.status);
+
+    return `
+      <tr>
+        <td>${esc(dateText(b.created_at))}</td>
+        <td>${esc(b.passenger_name)}</td>
+        <td>${esc(b.passenger_phone)}</td>
+        <td>${esc(b.pickup)}</td>
+        <td>${esc(b.destination)}</td>
+        <td>
+          <div class="fare-box">
+            <input class="fare-input" type="number" min="0" step="1"
+              id="fare-${id}" value="${esc(b.fare ?? "")}">
+            <button onclick="saveFare('${id}')">Save</button>
+          </div>
+        </td>
+        <td>
+          <select id="ride-status-${id}">
+            ${statuses.map(s=>`<option value="${esc(s)}" ${b.status===s?"selected":""}>${esc(s.replace("_"," "))}</option>`).join("")}
+          </select>
+          <button onclick="updateStatus('${id}')">Save</button>
+        </td>
+        <td>
+          <select class="driver-assignment" id="driver-${id}">
+            ${driverOptions(b.driver_id)}
+          </select>
+          <button onclick="assignDriver('${id}')">Save</button>
+        </td>
+        <td>${esc(dateText(b.pickup_time || b.picked_up_at))}</td>
+        <td>${esc(dateText(b.completed_at))}</td>
+      </tr>`;
+  }).join("");
 }
 
-function escapeJS(value){
-  return String(value??"")
-    .replace(/\\/g,"\\\\")
-    .replace(/'/g,"\\'")
-    .replace(/\r/g,"\\r")
-    .replace(/\n/g,"\\n");
+async function saveFare(id) {
+  const input = document.getElementById("fare-"+id);
+  if (!input || input.value.trim()==="") {
+    message("Enter a fare first.");
+    return;
+  }
+
+  const fare = Number(input.value);
+  if (!Number.isFinite(fare) || fare < 0) {
+    message("Enter a valid fare.");
+    return;
+  }
+
+  const {data,error} = await db.from("bookings")
+    .update({fare}).eq("id",id).select("id");
+
+  if (error) {
+    message("Could not save fare: "+error.message);
+    return;
+  }
+  if (!data || !data.length) {
+    message("No booking updated. Check admin permissions.");
+    return;
+  }
+  message("Fare saved successfully.");
 }
 
-function safeId(value1,value2){
-  return btoa(String(value1)+"|"+String(value2))
-    .replace(/[^a-zA-Z0-9]/g,"");
+async function assignDriver(id) {
+  const driverId = document.getElementById("driver-"+id).value || null;
+
+  if (driverId && !confirm("Assign this driver to the booking?")) return;
+
+  const {data,error} = await db.from("bookings")
+    .update({driver_id:driverId}).eq("id",id).select("id");
+
+  if (error) {
+    message("Could not assign driver: "+error.message);
+    return;
+  }
+  if (!data || !data.length) {
+    message("No booking updated. Check admin permissions.");
+    return;
+  }
+  message("Driver assignment saved.");
+  await loadBookings();
+}
+
+async function updateStatus(id) {
+  const status = document.getElementById("ride-status-"+id).value;
+  const booking = bookings.find(b => String(b.id) === String(id));
+  const updates = {status};
+
+  if (status === "accepted" && booking && !booking.pickup_time) {
+    updates.pickup_time = new Date().toISOString();
+  }
+
+  if (status === "picked_up" && booking && !booking.pickup_time) {
+    updates.pickup_time = new Date().toISOString();
+  }
+
+  if (status === "completed" && booking) {
+    if (!booking.pickup_time) updates.pickup_time = new Date().toISOString();
+    if (!booking.completed_at) updates.completed_at = new Date().toISOString();
+  }
+
+  const {data,error} = await db.from("bookings")
+    .update(updates).eq("id",id).select("id");
+
+  if (error) {
+    console.error(error);
+    message("Could not update booking status: "+error.message);
+    return;
+  }
+  if (!data || !data.length) {
+    message("No booking updated. Check admin permissions.");
+    return;
+  }
+
+  message("Booking status updated successfully.");
+  await loadBookings();
+}
+
+async function logout() {
+  const {error} = await db.auth.signOut();
+  if (error) {
+    message("Logout failed: "+error.message);
+    return;
+  }
+  location.href = "admin.html";
 }
 
 checkLogin();
