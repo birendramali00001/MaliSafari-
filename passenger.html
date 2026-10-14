@@ -3,182 +3,374 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MaliSafari | Passenger Portal</title>
+<title>MaliSafari Passenger Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f2f6f5;color:#172b27}
-header{background:#087f5b;color:white;text-align:center;padding:24px 14px}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f6f5;color:#18342b}
+header{background:#087f5b;color:white;text-align:center;padding:24px 12px}
 header h1{margin:0 0 8px}
 header p{margin:0}
-main{max-width:650px;margin:22px auto;padding:0 14px}
-.card{background:white;border-radius:15px;padding:20px;margin-bottom:18px;box-shadow:0 4px 18px #0000000d}
-h2{margin-top:0;font-size:21px}
-input,select,button{width:100%;padding:14px;margin:7px 0;border-radius:9px;font-size:16px}
-input,select{border:1px solid #cbd5d1;background:white}
+main{max-width:600px;margin:22px auto;padding:0 14px}
+.card{background:white;padding:20px;border-radius:14px;margin-bottom:18px;box-shadow:0 3px 15px #0000000c}
+h2{margin-top:0}
+input,select,button{display:block;width:100%;padding:13px;margin:9px 0;border-radius:8px;font-size:16px}
+input,select{border:1px solid #ccd7d1;background:white}
 button{border:0;background:#087f5b;color:white;font-weight:bold;cursor:pointer}
+button.secondary{background:#e8f3ed;color:#086447}
 button:disabled{opacity:.6}
+.hidden{display:none!important}
+.message{padding:12px;border-radius:8px;margin-bottom:14px;overflow-wrap:anywhere}
+.error{background:#fff0f0;color:#a11}
+.success{background:#e6f8eb;color:#176b36}
 .note{font-size:13px;color:#65736d;line-height:1.5}
-#message{padding:13px;border-radius:9px;margin-bottom:14px;overflow-wrap:anywhere}
-.success{background:#e4f8eb;color:#176b36}
-.error{background:#fff0f0;color:#a11c1c}
-.hidden{display:none}
-footer{text-align:center;color:#68756f;padding:15px;font-size:13px}
+.booking{border:1px solid #dce5df;padding:12px;border-radius:9px;margin-top:12px}
+footer{text-align:center;color:#65736d;font-size:13px;padding:18px}
 </style>
 </head>
 <body>
 <header>
   <h1>🛺 MaliSafari</h1>
-  <p>Your local e-rickshaw booking service</p>
+  <p>Passenger Registration & Ride Booking</p>
 </header>
 
 <main>
   <div id="message" class="hidden" role="status"></div>
 
-  <section class="card">
-    <h2>Book Your Ride</h2>
-    <form id="bookingForm">
-      <label for="name">Full name</label>
-      <input id="name" maxlength="100" required placeholder="Enter your full name" autocomplete="name">
+  <section id="authSection" class="card">
+    <h2 id="authTitle">Passenger Login</h2>
 
-      <label for="phone">Mobile number</label>
-      <input id="phone" type="tel" maxlength="20" required placeholder="Enter your phone number" autocomplete="tel">
+    <div id="registerFields" class="hidden">
+      <label for="fullName">Full name</label>
+      <input id="fullName" autocomplete="name" placeholder="Enter full name">
+    </div>
 
-      <label for="pickup">Pickup location</label>
-      <input id="pickup" maxlength="250" required placeholder="Where should we pick you up?">
+    <label for="phone">Phone number</label>
+    <input id="phone" type="tel" autocomplete="tel"
+           placeholder="Phone number, e.g. +97798XXXXXXXX">
 
-      <label for="destination">Destination</label>
-      <input id="destination" maxlength="250" required placeholder="Where do you want to go?">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password"
+           placeholder="Enter password">
 
-      <label for="pickupTime">Preferred pickup date and time</label>
-      <input id="pickupTime" type="datetime-local">
+    <button id="loginBtn" onclick="login()">Login</button>
+    <button id="registerBtn" class="secondary" onclick="showRegister()">Create New Account</button>
+    <button id="backBtn" class="secondary hidden" onclick="showLogin()">Back to Login</button>
 
-      <label for="payment">Preferred payment method</label>
-      <select id="payment" required>
-        <option value="cash">Cash</option>
-        <option value="esewa">eSewa</option>
-      </select>
-
-      <button id="submitBtn" type="submit">Confirm Booking</button>
-    </form>
+    <div id="otpArea" class="hidden">
+      <label for="otp">SMS verification code</label>
+      <input id="otp" inputmode="numeric" autocomplete="one-time-code"
+             placeholder="Enter verification code">
+      <button onclick="verifyRegistration()">Verify & Continue</button>
+    </div>
 
     <p class="note">
-      Your booking will be sent to MaliSafari. The fare and driver assignment
-      will be confirmed through the booking service.
+      New passengers must register first. Use your phone number and password
+      to log in afterward. Phone registration requires Supabase Phone Auth
+      and SMS verification to be configured.
     </p>
   </section>
 
-  <section class="card">
-    <h2>What happens next?</h2>
-    <p>1. Submit your ride request.</p>
-    <p>2. MaliSafari reviews your booking and assigns a driver.</p>
-    <p>3. Your driver and fare will be confirmed through MaliSafari.</p>
-    <p class="note">Keep your phone available after booking.</p>
+  <section id="appSection" class="hidden">
+    <div class="card">
+      <h2 id="welcome">Welcome</h2>
+      <p>You are logged in to MaliSafari.</p>
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+      <h2>Book Your Ride</h2>
+      <form id="bookingForm">
+        <label for="pickup">Pickup location</label>
+        <input id="pickup" maxlength="250" required placeholder="Enter pickup location">
+
+        <label for="destination">Destination</label>
+        <input id="destination" maxlength="250" required placeholder="Enter destination">
+
+        <label for="pickupTime">Preferred pickup date and time</label>
+        <input id="pickupTime" type="datetime-local">
+
+        <label for="payment">Payment method</label>
+        <select id="payment">
+          <option value="cash">Cash</option>
+          <option value="esewa">eSewa</option>
+        </select>
+
+        <button id="bookBtn" type="submit">Confirm Booking</button>
+      </form>
+      <p class="note">Your fare and driver assignment will be confirmed by MaliSafari.</p>
+    </div>
+
+    <div class="card">
+      <h2>My Bookings</h2>
+      <button class="secondary" onclick="loadBookings()">Refresh Bookings</button>
+      <div id="bookingList">Your booking history will appear here when private passenger access is configured.</div>
+    </div>
   </section>
 </main>
 
 <footer>MaliSafari · Biratnagar, Nepal</footer>
 
 <script>
-(function(){
-  const message = document.getElementById("message");
-  const form = document.getElementById("bookingForm");
-  const button = document.getElementById("submitBtn");
+let db = null;
+let currentUser = null;
+let registeringName = "";
 
-  function showMessage(text, type){
-    message.textContent = text;
-    message.className = type;
-    message.scrollIntoView({behavior:"smooth", block:"center"});
+const $ = id => document.getElementById(id);
+
+function message(text, type="error") {
+  $("message").textContent = text;
+  $("message").className = "message " + type;
+  $("message").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function clearMessage() {
+  $("message").className = "hidden";
+  $("message").textContent = "";
+}
+
+function phoneValue() {
+  return $("phone").value.trim().replace(/[ ()-]/g,"");
+}
+
+function showRegister() {
+  clearMessage();
+  $("authTitle").textContent = "Create Passenger Account";
+  $("registerFields").classList.remove("hidden");
+  $("loginBtn").classList.add("hidden");
+  $("registerBtn").classList.add("hidden");
+  $("backBtn").classList.remove("hidden");
+}
+
+function showLogin() {
+  clearMessage();
+  $("authTitle").textContent = "Passenger Login";
+  $("registerFields").classList.add("hidden");
+  $("loginBtn").classList.remove("hidden");
+  $("registerBtn").classList.remove("hidden");
+  $("backBtn").classList.add("hidden");
+  $("otpArea").classList.add("hidden");
+}
+
+function enterPortal(user) {
+  currentUser = user;
+  $("authSection").classList.add("hidden");
+  $("appSection").classList.remove("hidden");
+  $("welcome").textContent =
+    "Welcome, " + (user.user_metadata?.full_name || "Passenger");
+  clearMessage();
+  loadBookings();
+}
+
+async function register() {
+  clearMessage();
+  const name = $("fullName").value.trim();
+  const phone = phoneValue();
+  const password = $("password").value;
+
+  if (!name || !phone || !password) {
+    message("Enter your full name, phone number and password.");
+    return;
+  }
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+    message("Enter your phone in international format, such as +97798XXXXXXXX.");
+    return;
+  }
+  if (password.length < 8) {
+    message("Password must contain at least 8 characters.");
+    return;
   }
 
-  function getClient(){
-    const url = window.MALISAFARI_SUPABASE_URL;
-    const key = window.MALISAFARI_SUPABASE_KEY;
+  registeringName = name;
 
-    if(!url || !key || !window.supabase){
-      throw new Error("Supabase configuration could not be loaded. Please check config.js.");
-    }
+  const {data,error} = await db.auth.signUp({
+    phone,
+    password,
+    options: {data:{full_name:name, phone:phone}}
+  });
 
-    return window.supabase.createClient(url, key);
+  if (error) {
+    message("Registration failed: " + error.message);
+    return;
   }
 
-  form.addEventListener("submit", async function(event){
-    event.preventDefault();
-    message.className = "hidden";
+  if (data.session && data.user) {
+    enterPortal(data.user);
+    message("Registration successful. You are logged in.", "success");
+  } else {
+    $("otpArea").classList.remove("hidden");
+    message("Registration started. Enter the SMS verification code sent to your phone.", "success");
+  }
+}
 
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const pickup = document.getElementById("pickup").value.trim();
-    const destination = document.getElementById("destination").value.trim();
-    const pickupTime = document.getElementById("pickupTime").value;
-    const payment = document.getElementById("payment").value;
+async function verifyRegistration() {
+  clearMessage();
+  const phone = phoneValue();
+  const token = $("otp").value.trim();
 
-    if(!name || !phone || !pickup || !destination){
-      showMessage("Please complete all required fields.", "error");
+  if (!token) {
+    message("Enter the SMS verification code.");
+    return;
+  }
+
+  const {data,error} = await db.auth.verifyOtp({
+    phone,
+    token,
+    type:"sms"
+  });
+
+  if (error) {
+    message("Verification failed: " + error.message);
+    return;
+  }
+
+  enterPortal(data.user);
+  message("Phone verified. Welcome to MaliSafari!", "success");
+}
+
+async function login() {
+  clearMessage();
+  const phone = phoneValue();
+  const password = $("password").value;
+
+  if (!phone || !password) {
+    message("Enter your phone number and password.");
+    return;
+  }
+
+  const {data,error} = await db.auth.signInWithPassword({phone,password});
+
+  if (error) {
+    message("Login failed: " + error.message);
+    return;
+  }
+
+  enterPortal(data.user);
+}
+
+async function logout() {
+  const {error} = await db.auth.signOut();
+
+  if (error) {
+    message("Logout failed: " + error.message);
+    return;
+  }
+
+  currentUser = null;
+  $("appSection").classList.add("hidden");
+  $("authSection").classList.remove("hidden");
+  $("password").value = "";
+  showLogin();
+  message("You have logged out successfully.", "success");
+}
+
+$("bookingForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  clearMessage();
+
+  if (!currentUser) {
+    message("Please log in before booking a ride.");
+    return;
+  }
+
+  const pickup = $("pickup").value.trim();
+  const destination = $("destination").value.trim();
+  const pickupTime = $("pickupTime").value;
+
+  if (!pickup || !destination) {
+    message("Enter both pickup and destination.");
+    return;
+  }
+
+  if (pickup.toLowerCase() === destination.toLowerCase()) {
+    message("Pickup and destination cannot be the same.");
+    return;
+  }
+
+  const booking = {
+    passenger_name: currentUser.user_metadata?.full_name || registeringName || "Passenger",
+    passenger_phone: currentUser.phone || currentUser.user_metadata?.phone || phoneValue(),
+    pickup,
+    destination,
+    fare: 0,
+    status: "pending"
+  };
+
+  if (pickupTime) {
+    const date = new Date(pickupTime);
+    if (Number.isNaN(date.getTime()) || date.getTime() < Date.now() - 60000) {
+      message("Choose a future pickup date and time.");
       return;
     }
+    booking.pickup_time = date.toISOString();
+  }
 
-    if(pickup.toLowerCase() === destination.toLowerCase()){
-      showMessage("Pickup and destination cannot be the same.", "error");
-      return;
+  $("bookBtn").disabled = true;
+  $("bookBtn").textContent = "Submitting...";
+
+  try {
+    let result = await db.from("bookings").insert({
+      ...booking,
+      payment_method: $("payment").value
+    });
+
+    if (result.error && /payment_method|column/i.test(result.error.message)) {
+      result = await db.from("bookings").insert(booking);
     }
 
-    const booking = {
-      passenger_name: name,
-      passenger_phone: phone,
-      pickup: pickup,
-      destination: destination,
-      fare: 0,
-      status: "pending"
-    };
+    if (result.error) throw result.error;
 
-    if(pickupTime){
-      const date = new Date(pickupTime);
-      if(Number.isNaN(date.getTime()) || date.getTime() < Date.now() - 60000){
-        showMessage("Please select a future pickup time.", "error");
-        return;
-      }
-      booking.pickup_time = date.toISOString();
-    }
+    $("bookingForm").reset();
+    message("Booking submitted successfully! MaliSafari will contact you to confirm your ride.", "success");
+    await loadBookings();
+  } catch (error) {
+    message("Booking failed: " + (error.message || "Please try again."));
+  } finally {
+    $("bookBtn").disabled = false;
+    $("bookBtn").textContent = "Confirm Booking";
+  }
+});
 
-    // Save the preferred payment method when the existing table supports it.
-    // If this optional column is missing, retry without it.
-    booking.payment_method = payment;
+async function loadBookings() {
+  $("bookingList").textContent =
+    "Your booking history requires a secure passenger-to-booking database link. You can still submit new bookings above.";
+}
 
-    button.disabled = true;
-    button.textContent = "Submitting booking...";
+async function initialize() {
+  const url = window.MALISAFARI_SUPABASE_URL;
+  const key = window.MALISAFARI_SUPABASE_KEY;
 
-    try{
-      const db = getClient();
-      let result = await db.from("bookings").insert(booking);
+  if (!url || !key || !window.supabase) {
+    message("Supabase configuration could not be loaded. Check config.js.");
+    $("loginBtn").disabled = true;
+    $("registerBtn").disabled = true;
+    return;
+  }
 
-      if(result.error &&
-         /payment_method|column/i.test(result.error.message)){
-        delete booking.payment_method;
-        result = await db.from("bookings").insert(booking);
-      }
+  db = window.supabase.createClient(url,key);
 
-      if(result.error){
-        throw result.error;
-      }
+  const {data,error} = await db.auth.getSession();
+  if (error) {
+    message("Could not check login: " + error.message);
+    return;
+  }
 
-      form.reset();
-      showMessage(
-        "Booking submitted successfully! MaliSafari will contact you to confirm your fare and driver.",
-        "success"
-      );
-    }catch(error){
-      showMessage(
-        "Booking could not be submitted: " + (error.message || "Please try again."),
-        "error"
-      );
-    }finally{
-      button.disabled = false;
-      button.textContent = "Confirm Booking";
+  if (data.session) enterPortal(data.session.user);
+
+  db.auth.onAuthStateChange((event,session) => {
+    if (event === "SIGNED_OUT") {
+      currentUser = null;
+      $("appSection").classList.add("hidden");
+      $("authSection").classList.remove("hidden");
     }
   });
-})();
+}
+
+$("registerBtn").onclick = showRegister;
+$("loginBtn").onclick = login;
+$("backBtn").onclick = showLogin;
+initialize();
 </script>
 </body>
 </html>
