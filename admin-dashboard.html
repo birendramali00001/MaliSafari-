@@ -116,11 +116,8 @@ function message(text) {
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#39;"
   }[c]));
 }
 
@@ -130,12 +127,48 @@ function dateText(v) {
   return isNaN(d.getTime()) ? "—" : d.toLocaleString();
 }
 
+/*
+  IMPORTANT:
+  The bookings table in this project does not have an "id" column.
+  Use the existing booking fields to locate the original row instead.
+*/
+function matchValue(query, column, value) {
+  return value === null || value === undefined
+    ? query.is(column, null)
+    : query.eq(column, value);
+}
+
+function bookingUpdateQuery(booking, updates) {
+  let query = db.from("bookings").update(updates);
+
+  // Match the existing row using its original field values.
+  // Include the current fare/status/driver to avoid stale updates.
+  const matchColumns = [
+    "created_at",
+    "passenger_name",
+    "passenger_phone",
+    "pickup",
+    "destination",
+    "fare",
+    "status",
+    "driver_id"
+  ];
+
+  for (const column of matchColumns) {
+    query = matchValue(query, column, booking[column]);
+  }
+
+  return query.select("created_at");
+}
+
 async function checkLogin() {
   const {data,error} = await db.auth.getSession();
+
   if (error || !data.session) {
     location.href = "admin.html";
     return;
   }
+
   await refreshDashboard();
 }
 
@@ -148,21 +181,25 @@ async function refreshDashboard() {
 
 async function loadDrivers() {
   const tbody = document.getElementById("driverRows");
-  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading drivers...</td></tr>';
+  tbody.innerHTML =
+    '<tr><td colspan="9" class="empty">Loading drivers...</td></tr>';
 
   const {data,error} = await db.from("drivers")
     .select("*").order("created_at",{ascending:false});
 
   if (error) {
     console.error(error);
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Could not load drivers: '+esc(error.message)+'</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="9" class="empty">Could not load drivers: '+
+      esc(error.message)+'</td></tr>';
     return;
   }
 
   drivers = data || [];
 
   if (!drivers.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">No drivers added yet.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="9" class="empty">No drivers added yet.</td></tr>';
     return;
   }
 
@@ -196,9 +233,7 @@ async function loadDrivers() {
           <option value="true" ${d.approved===true?"selected":""}>Approved</option>
         </select>
       </td>
-      <td>
-        <button onclick="saveDriver('${esc(d.id)}')">Save</button>
-      </td>
+      <td><button onclick="saveDriver('${esc(d.id)}')">Save</button></td>
     </tr>
   `).join("");
 }
@@ -272,7 +307,7 @@ document.getElementById("driverForm").addEventListener("submit", async event => 
   message("Driver added. Portal access remains unapproved until you approve it.");
   await loadDrivers();
   await loadBookings();
-});
+}
 
 function driverOptions(currentId) {
   let html = '<option value="">Unassigned</option>';
@@ -293,27 +328,32 @@ function driverOptions(currentId) {
 
 async function loadBookings() {
   const tbody = document.getElementById("bookingRows");
-  tbody.innerHTML = '<tr><td colspan="10" class="empty">Loading bookings...</td></tr>';
+  tbody.innerHTML =
+    '<tr><td colspan="10" class="empty">Loading bookings...</td></tr>';
 
   const {data,error} = await db.from("bookings")
     .select("*").order("created_at",{ascending:false});
 
   if (error) {
     console.error(error);
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">Could not load bookings: '+esc(error.message)+'</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="10" class="empty">Could not load bookings: '+
+      esc(error.message)+'</td></tr>';
     return;
   }
 
   bookings = data || [];
 
   if (!bookings.length) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">No bookings yet.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="10" class="empty">No bookings yet.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = bookings.map(b => {
-    const id = esc(b.id);
+  tbody.innerHTML = bookings.map((b,index) => {
+    const key = "booking-" + index;
     const statuses = ["pending","accepted","picked_up","completed","cancelled"];
+
     if (b.status && !statuses.includes(b.status)) statuses.push(b.status);
 
     return `
@@ -326,21 +366,21 @@ async function loadBookings() {
         <td>
           <div class="fare-box">
             <input class="fare-input" type="number" min="0" step="1"
-              id="fare-${id}" value="${esc(b.fare ?? "")}">
-            <button onclick="saveFare('${id}')">Save</button>
+              id="fare-${key}" value="${esc(b.fare ?? "")}">
+            <button onclick="saveFare(${index})">Save</button>
           </div>
         </td>
         <td>
-          <select id="ride-status-${id}">
+          <select id="ride-status-${key}">
             ${statuses.map(s=>`<option value="${esc(s)}" ${b.status===s?"selected":""}>${esc(s.replace("_"," "))}</option>`).join("")}
           </select>
-          <button onclick="updateStatus('${id}')">Save</button>
+          <button onclick="updateStatus(${index})">Save</button>
         </td>
         <td>
-          <select class="driver-assignment" id="driver-${id}">
+          <select class="driver-assignment" id="driver-${key}">
             ${driverOptions(b.driver_id)}
           </select>
-          <button onclick="assignDriver('${id}')">Save</button>
+          <button onclick="assignDriver(${index})">Save</button>
         </td>
         <td>${esc(dateText(b.pickup_time || b.picked_up_at))}</td>
         <td>${esc(dateText(b.completed_at))}</td>
@@ -348,81 +388,101 @@ async function loadBookings() {
   }).join("");
 }
 
-async function saveFare(id) {
-  const input = document.getElementById("fare-"+id);
-  if (!input || input.value.trim()==="") {
+async function saveFare(index) {
+  const booking = bookings[index];
+  const input = document.getElementById("fare-booking-"+index);
+
+  if (!booking || !input || input.value.trim()==="") {
     message("Enter a fare first.");
     return;
   }
 
   const fare = Number(input.value);
+
   if (!Number.isFinite(fare) || fare < 0) {
     message("Enter a valid fare.");
     return;
   }
 
-  const {data,error} = await db.from("bookings")
-    .update({fare}).eq("id",id).select("id");
+  const {data,error} = await bookingUpdateQuery(booking,{fare});
 
   if (error) {
+    console.error(error);
     message("Could not save fare: "+error.message);
     return;
   }
+
   if (!data || !data.length) {
-    message("No booking updated. Check admin permissions.");
+    message("No booking matched the original details. Refresh and try again.");
     return;
   }
+
   message("Fare saved successfully.");
+  await loadBookings();
 }
 
-async function assignDriver(id) {
-  const driverId = document.getElementById("driver-"+id).value || null;
+async function assignDriver(index) {
+  const booking = bookings[index];
+  const select = document.getElementById("driver-booking-"+index);
+
+  if (!booking || !select) {
+    message("Booking not found. Refresh the dashboard.");
+    return;
+  }
+
+  const driverId = select.value || null;
 
   if (driverId && !confirm("Assign this driver to the booking?")) return;
 
-  const {data,error} = await db.from("bookings")
-    .update({driver_id:driverId}).eq("id",id).select("id");
+  const {data,error} = await bookingUpdateQuery(booking,{driver_id:driverId});
 
   if (error) {
+    console.error(error);
     message("Could not assign driver: "+error.message);
     return;
   }
+
   if (!data || !data.length) {
-    message("No booking updated. Check admin permissions.");
+    message("No booking matched the original details. Refresh and try again.");
     return;
   }
+
   message("Driver assignment saved.");
   await loadBookings();
 }
 
-async function updateStatus(id) {
-  const status = document.getElementById("ride-status-"+id).value;
-  const booking = bookings.find(b => String(b.id) === String(id));
+async function updateStatus(index) {
+  const booking = bookings[index];
+  const select = document.getElementById("ride-status-booking-"+index);
+
+  if (!booking || !select) {
+    message("Booking not found. Refresh the dashboard.");
+    return;
+  }
+
+  const status = select.value;
   const updates = {status};
+  const now = new Date().toISOString();
 
-  if (status === "accepted" && booking && !booking.pickup_time) {
-    updates.pickup_time = new Date().toISOString();
+  if ((status === "accepted" || status === "picked_up") && !booking.pickup_time) {
+    updates.pickup_time = now;
   }
 
-  if (status === "picked_up" && booking && !booking.pickup_time) {
-    updates.pickup_time = new Date().toISOString();
+  if (status === "completed") {
+    if (!booking.pickup_time) updates.pickup_time = now;
+    if (!booking.completed_at) updates.completed_at = now;
   }
 
-  if (status === "completed" && booking) {
-    if (!booking.pickup_time) updates.pickup_time = new Date().toISOString();
-    if (!booking.completed_at) updates.completed_at = new Date().toISOString();
-  }
-
-  const {data,error} = await db.from("bookings")
-    .update(updates).eq("id",id).select("id");
+  const {data,error} = await bookingUpdateQuery(booking,updates);
 
   if (error) {
     console.error(error);
     message("Could not update booking status: "+error.message);
     return;
   }
+
   if (!data || !data.length) {
-    message("No booking updated. Check admin permissions.");
+    message("No booking matched the original details. Refresh and try again.");
     return;
   }
 
@@ -432,10 +492,12 @@ async function updateStatus(id) {
 
 async function logout() {
   const {error} = await db.auth.signOut();
+
   if (error) {
     message("Logout failed: "+error.message);
     return;
   }
+
   location.href = "admin.html";
 }
 
