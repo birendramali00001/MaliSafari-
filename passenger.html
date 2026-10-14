@@ -1,1 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaliSafari | Passenger Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f6f5;color:#172b27}
+header{background:#087f5b;color:white;text-align:center;padding:24px 14px}
+header h1{margin:0 0 8px}
+header p{margin:0}
+main{max-width:650px;margin:22px auto;padding:0 14px}
+.card{background:white;border-radius:15px;padding:20px;margin-bottom:18px;box-shadow:0 4px 18px #0000000d}
+h2{margin-top:0;font-size:21px}
+input,select,button{width:100%;padding:14px;margin:7px 0;border-radius:9px;font-size:16px}
+input,select{border:1px solid #cbd5d1;background:white}
+button{border:0;background:#087f5b;color:white;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6}
+.note{font-size:13px;color:#65736d;line-height:1.5}
+#message{padding:13px;border-radius:9px;margin-bottom:14px;overflow-wrap:anywhere}
+.success{background:#e4f8eb;color:#176b36}
+.error{background:#fff0f0;color:#a11c1c}
+.hidden{display:none}
+footer{text-align:center;color:#68756f;padding:15px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛺 MaliSafari</h1>
+  <p>Your local e-rickshaw booking service</p>
+</header>
 
+<main>
+  <div id="message" class="hidden" role="status"></div>
+
+  <section class="card">
+    <h2>Book Your Ride</h2>
+    <form id="bookingForm">
+      <label for="name">Full name</label>
+      <input id="name" maxlength="100" required placeholder="Enter your full name" autocomplete="name">
+
+      <label for="phone">Mobile number</label>
+      <input id="phone" type="tel" maxlength="20" required placeholder="Enter your phone number" autocomplete="tel">
+
+      <label for="pickup">Pickup location</label>
+      <input id="pickup" maxlength="250" required placeholder="Where should we pick you up?">
+
+      <label for="destination">Destination</label>
+      <input id="destination" maxlength="250" required placeholder="Where do you want to go?">
+
+      <label for="pickupTime">Preferred pickup date and time</label>
+      <input id="pickupTime" type="datetime-local">
+
+      <label for="payment">Preferred payment method</label>
+      <select id="payment" required>
+        <option value="cash">Cash</option>
+        <option value="esewa">eSewa</option>
+      </select>
+
+      <button id="submitBtn" type="submit">Confirm Booking</button>
+    </form>
+
+    <p class="note">
+      Your booking will be sent to MaliSafari. The fare and driver assignment
+      will be confirmed through the booking service.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>What happens next?</h2>
+    <p>1. Submit your ride request.</p>
+    <p>2. MaliSafari reviews your booking and assigns a driver.</p>
+    <p>3. Your driver and fare will be confirmed through MaliSafari.</p>
+    <p class="note">Keep your phone available after booking.</p>
+  </section>
+</main>
+
+<footer>MaliSafari · Biratnagar, Nepal</footer>
+
+<script>
+(function(){
+  const message = document.getElementById("message");
+  const form = document.getElementById("bookingForm");
+  const button = document.getElementById("submitBtn");
+
+  function showMessage(text, type){
+    message.textContent = text;
+    message.className = type;
+    message.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  function getClient(){
+    const url = window.MALISAFARI_SUPABASE_URL;
+    const key = window.MALISAFARI_SUPABASE_KEY;
+
+    if(!url || !key || !window.supabase){
+      throw new Error("Supabase configuration could not be loaded. Please check config.js.");
+    }
+
+    return window.supabase.createClient(url, key);
+  }
+
+  form.addEventListener("submit", async function(event){
+    event.preventDefault();
+    message.className = "hidden";
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const pickup = document.getElementById("pickup").value.trim();
+    const destination = document.getElementById("destination").value.trim();
+    const pickupTime = document.getElementById("pickupTime").value;
+    const payment = document.getElementById("payment").value;
+
+    if(!name || !phone || !pickup || !destination){
+      showMessage("Please complete all required fields.", "error");
+      return;
+    }
+
+    if(pickup.toLowerCase() === destination.toLowerCase()){
+      showMessage("Pickup and destination cannot be the same.", "error");
+      return;
+    }
+
+    const booking = {
+      passenger_name: name,
+      passenger_phone: phone,
+      pickup: pickup,
+      destination: destination,
+      fare: 0,
+      status: "pending"
+    };
+
+    if(pickupTime){
+      const date = new Date(pickupTime);
+      if(Number.isNaN(date.getTime()) || date.getTime() < Date.now() - 60000){
+        showMessage("Please select a future pickup time.", "error");
+        return;
+      }
+      booking.pickup_time = date.toISOString();
+    }
+
+    // Save the preferred payment method when the existing table supports it.
+    // If this optional column is missing, retry without it.
+    booking.payment_method = payment;
+
+    button.disabled = true;
+    button.textContent = "Submitting booking...";
+
+    try{
+      const db = getClient();
+      let result = await db.from("bookings").insert(booking);
+
+      if(result.error &&
+         /payment_method|column/i.test(result.error.message)){
+        delete booking.payment_method;
+        result = await db.from("bookings").insert(booking);
+      }
+
+      if(result.error){
+        throw result.error;
+      }
+
+      form.reset();
+      showMessage(
+        "Booking submitted successfully! MaliSafari will contact you to confirm your fare and driver.",
+        "success"
+      );
+    }catch(error){
+      showMessage(
+        "Booking could not be submitted: " + (error.message || "Please try again."),
+        "error"
+      );
+    }finally{
+      button.disabled = false;
+      button.textContent = "Confirm Booking";
+    }
+  });
+})();
+</script>
+</body>
+</html>
