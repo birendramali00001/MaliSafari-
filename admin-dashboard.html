@@ -24,7 +24,7 @@ input,select{padding:9px;border:1px solid #ccd5cf;border-radius:7px;max-width:10
 .driver-form input,.driver-form select,.driver-form button{width:100%}
 .driver-form button{grid-column:1/-1}
 .table-container{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:1000px}
+table{width:100%;border-collapse:collapse;min-width:1200px}
 th,td{text-align:left;padding:10px;border-bottom:1px solid #eee;vertical-align:middle}
 th{background:#f0f4f1}
 .message{padding:10px;background:#e7f2e9;border-radius:8px;overflow-wrap:anywhere;margin-bottom:15px}
@@ -56,10 +56,12 @@ th{background:#f0f4f1}
 <thead><tr>
 <th>Time</th><th>Passenger</th><th>Phone</th><th>Pickup</th>
 <th>Destination</th><th>Fare</th><th>Ride Status</th>
-<th>Assigned Driver</th><th>Pickup Time</th><th>Completion Time</th>
+<th>Assigned Driver</th><th>Payment Method</th>
+<th>Payment Status</th><th>Payment Action</th>
+<th>Pickup Time</th><th>Completion Time</th>
 </tr></thead>
 <tbody id="bookingRows">
-<tr><td colspan="10" class="empty">Loading bookings...</td></tr>
+<tr><td colspan="13" class="empty">Loading bookings...</td></tr>
 </tbody>
 </table>
 </div>
@@ -153,7 +155,7 @@ try {
   console.error("MaliSafari initialization error:", error);
   message("Dashboard setup error: " + error.message);
   document.getElementById("bookingRows").innerHTML =
-    '<tr><td colspan="10" class="empty">Check the setup error shown above.</td></tr>';
+    '<tr><td colspan="13" class="empty">Check the setup error shown above.</td></tr>';
   document.getElementById("driverRows").innerHTML =
     '<tr><td colspan="9" class="empty">Dashboard setup failed.</td></tr>';
 }
@@ -186,7 +188,6 @@ async function checkLogin() {
   if (!db) return;
 
   const {data, error} = await db.auth.getSession();
-
   if (error) throw error;
 
   if (!data.session) {
@@ -351,7 +352,7 @@ document.getElementById("driverForm").addEventListener("submit", async event => 
     console.error("Add driver error:", error);
     message("Could not add driver: " + error.message);
   }
-}); // Correctly closes the Add Driver form event listener.
+});
 
 function driverOptions(currentId) {
   let html = '<option value="">Unassigned</option>';
@@ -373,7 +374,7 @@ function driverOptions(currentId) {
 async function loadBookings() {
   const tbody = document.getElementById("bookingRows");
   tbody.innerHTML =
-    '<tr><td colspan="10" class="empty">Loading bookings...</td></tr>';
+    '<tr><td colspan="13" class="empty">Loading bookings...</td></tr>';
 
   const {data, error} = await db.from("bookings")
     .select("*").order("created_at", {ascending:false});
@@ -381,7 +382,7 @@ async function loadBookings() {
   if (error) {
     console.error("Load bookings error:", error);
     tbody.innerHTML =
-      '<tr><td colspan="10" class="empty">Could not load bookings: ' +
+      '<tr><td colspan="13" class="empty">Could not load bookings: ' +
       esc(error.message) + '</td></tr>';
     return;
   }
@@ -390,7 +391,7 @@ async function loadBookings() {
 
   if (!bookings.length) {
     tbody.innerHTML =
-      '<tr><td colspan="10" class="empty">No bookings yet.</td></tr>';
+      '<tr><td colspan="13" class="empty">No bookings yet.</td></tr>';
     return;
   }
 
@@ -429,6 +430,14 @@ async function loadBookings() {
             ${driverOptions(b.driver_id)}
           </select>
           <button onclick="assignDriver(${index})">Save</button>
+        </td>
+        <td>${esc(b.payment_method || "Not selected")}</td>
+        <td>${esc(b.payment_status || "pending")}</td>
+        <td>
+          ${String(b.payment_method || "").toLowerCase() === "esewa" &&
+            String(b.payment_status || "pending").toLowerCase() === "pending"
+            ? `<button onclick="verifyEsewa(${index})">Verify eSewa</button>`
+            : "—"}
         </td>
         <td>${esc(dateText(b.pickup_time || b.picked_up_at))}</td>
         <td>${esc(dateText(b.completed_at))}</td>
@@ -512,19 +521,9 @@ async function updateStatus(index) {
     }
 
     const status = select.value;
-    const updates = {status};
-    const now = new Date().toISOString();
 
-    if ((status === "accepted" || status === "picked_up") && !booking.pickup_time) {
-      updates.pickup_time = now;
-    }
-
-    if (status === "completed") {
-      if (!booking.pickup_time) updates.pickup_time = now;
-      if (!booking.completed_at) updates.completed_at = now;
-    }
-
-    const {data, error} = await bookingUpdateQuery(booking, updates);
+    // Pickup and completion timestamps are controlled by the driver portal.
+    const {data, error} = await bookingUpdateQuery(booking, {status});
 
     if (error) throw error;
 
@@ -533,11 +532,46 @@ async function updateStatus(index) {
       return;
     }
 
-    message("Booking status updated successfully.");
+    message("Booking status updated. Ride timestamps are controlled by the driver portal.");
     await loadBookings();
   } catch (error) {
     console.error("Update status error:", error);
     message("Could not update booking status: " + error.message);
+  }
+}
+
+async function verifyEsewa(index) {
+  try {
+    const booking = bookings[index];
+
+    if (!booking ||
+        String(booking.payment_method || "").toLowerCase() !== "esewa" ||
+        String(booking.payment_status || "pending").toLowerCase() !== "pending") {
+      message("This booking is not awaiting eSewa verification.");
+      return;
+    }
+
+    if (!confirm("Have you confirmed that this eSewa payment was received?")) {
+      return;
+    }
+
+    const {data, error} = await bookingUpdateQuery(
+      booking,
+      {payment_status: "verified"}
+    );
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      message("Payment was not updated. Refresh and check admin permissions.");
+      return;
+    }
+
+    message("eSewa payment verified successfully.");
+    await refreshDashboard();
+  } catch (error) {
+    console.error("Verify eSewa error:", error);
+    message("Could not verify payment: " + error.message);
   }
 }
 
@@ -559,7 +593,7 @@ if (db) {
     console.error("MaliSafari dashboard error:", error);
     message("Dashboard error: " + (error.message || String(error)));
     document.getElementById("bookingRows").innerHTML =
-      '<tr><td colspan="10" class="empty">Dashboard failed to load. Check the error message above.</td></tr>';
+      '<tr><td colspan="13" class="empty">Dashboard failed to load. Check the error message above.</td></tr>';
   });
 }
 </script>
