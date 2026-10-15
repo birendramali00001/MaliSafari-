@@ -17,7 +17,7 @@ section{background:white;border-radius:12px;padding:16px;margin-bottom:18px;box-
 h2{margin-top:0}
 .controls{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
 button{padding:10px;border:0;border-radius:7px;cursor:pointer;background:#087a45;color:white}
-button:disabled{opacity:.5}
+button:disabled{opacity:.5;cursor:wait}
 .logout{background:#333}
 input,select{padding:9px;border:1px solid #ccd5cf;border-radius:7px;max-width:100%}
 .driver-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -29,14 +29,11 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee;vertical-align:m
 th{background:#f0f4f1}
 .message{padding:10px;background:#e7f2e9;border-radius:8px;overflow-wrap:anywhere;margin-bottom:15px}
 .fare-box{display:flex;gap:5px;align-items:center}
-.fare-input{width:75px}
+.fare-input{width:85px}
 .email-input{width:190px}
 .empty{text-align:center;padding:20px;color:#68756e}
 .small{font-size:13px;color:#68756e;line-height:1.5}
-@media(max-width:600px){
- .driver-form{grid-template-columns:1fr}
- header h1{font-size:22px}
-}
+@media(max-width:600px){.driver-form{grid-template-columns:1fr}header h1{font-size:22px}}
 </style>
 </head>
 <body>
@@ -56,12 +53,11 @@ th{background:#f0f4f1}
 <thead><tr>
 <th>Time</th><th>Passenger</th><th>Phone</th><th>Pickup</th>
 <th>Destination</th><th>Fare</th><th>Ride Status</th>
-<th>Assigned Driver</th><th>Payment Method</th>
-<th>Payment Status</th><th>Payment Action</th>
+<th>Assigned Driver</th><th>Payment Method</th><th>Payment Status</th>
 <th>Pickup Time</th><th>Completion Time</th>
 </tr></thead>
 <tbody id="bookingRows">
-<tr><td colspan="13" class="empty">Loading bookings...</td></tr>
+<tr><td colspan="12" class="empty">Loading bookings...</td></tr>
 </tbody>
 </table>
 </div>
@@ -69,7 +65,7 @@ th{background:#f0f4f1}
 
 <section>
 <h2>➕ Add Driver</h2>
-<p class="small">Add the driver's details here. An email is required for Driver Portal registration. New drivers are not automatically approved for portal access.</p>
+<p class="small">Add driver details here. New drivers are not automatically approved for Driver Portal access.</p>
 <form id="driverForm" class="driver-form">
 <input id="driverName" placeholder="Driver name" required>
 <input id="driverPhone" type="tel" placeholder="Phone number" required>
@@ -90,7 +86,7 @@ th{background:#f0f4f1}
 
 <section>
 <h2>👨‍✈️ Drivers, Emails and Approvals</h2>
-<p class="small">Save a driver's email and use the approval control to enable or disable Driver Portal access. The driver must also create an account using that same email.</p>
+<p class="small">The driver must register using the same email address. Approve the driver only after their account is ready.</p>
 <div class="table-container">
 <table>
 <thead><tr>
@@ -110,6 +106,9 @@ th{background:#f0f4f1}
 "use strict";
 
 const messageBox = document.getElementById("message");
+let db = null;
+let drivers = [];
+let bookings = [];
 
 function message(text) {
   messageBox.textContent = text;
@@ -117,11 +116,7 @@ function message(text) {
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
   }[c]));
 }
 
@@ -131,102 +126,93 @@ function dateText(v) {
   return isNaN(d.getTime()) ? "—" : d.toLocaleString();
 }
 
-let db;
-let drivers = [];
-let bookings = [];
-
 try {
-  if (!window.supabase) {
-    throw new Error("Supabase library did not load. Check your internet connection.");
-  }
-
-  if (
-    typeof MALISAFARI_SUPABASE_URL === "undefined" ||
-    typeof MALISAFARI_SUPABASE_KEY === "undefined"
-  ) {
+  if (!window.supabase) throw new Error("Supabase library did not load.");
+  if (typeof MALISAFARI_SUPABASE_URL === "undefined" ||
+      typeof MALISAFARI_SUPABASE_KEY === "undefined") {
     throw new Error("Supabase settings are missing. Check config.js.");
   }
-
   db = window.supabase.createClient(
     MALISAFARI_SUPABASE_URL,
     MALISAFARI_SUPABASE_KEY
   );
-} catch (error) {
-  console.error("MaliSafari initialization error:", error);
-  message("Dashboard setup error: " + error.message);
-  document.getElementById("bookingRows").innerHTML =
-    '<tr><td colspan="13" class="empty">Check the setup error shown above.</td></tr>';
-  document.getElementById("driverRows").innerHTML =
-    '<tr><td colspan="9" class="empty">Dashboard setup failed.</td></tr>';
+} catch (e) {
+  console.error(e);
+  message("Dashboard setup error: " + e.message);
 }
 
-/* FIX: Update a booking by its unique booking_id. */
-function bookingUpdateQuery(booking, updates) {
-  if (!booking || !booking.booking_id) {
-    throw new Error(
-      "Booking ID is missing. Refresh the dashboard and try again."
-    );
+/*
+  Update by booking_id and check the actual database response.
+  An empty returned array means Supabase did not update a visible row.
+*/
+async function bookingUpdateQuery(booking, updates) {
+  if (!booking || booking.booking_id == null ||
+      String(booking.booking_id).trim() === "") {
+    throw new Error("Booking ID is missing. Refresh the dashboard.");
   }
 
-  return db.from("bookings")
+  const {data, error} = await db.from("bookings")
     .update(updates)
     .eq("booking_id", booking.booking_id)
     .select("booking_id");
+
+  if (error) {
+    throw new Error("Supabase rejected the booking update: " + error.message);
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Supabase updated 0 rows. Check the booking_id and the admin UPDATE RLS policy."
+    );
+  }
+
+  return data[0];
 }
 
 async function checkLogin() {
   if (!db) return;
-
   const {data, error} = await db.auth.getSession();
   if (error) throw error;
-
   if (!data.session) {
     location.href = "admin.html";
     return;
   }
-
   await refreshDashboard();
 }
 
 async function refreshDashboard() {
   if (!db) {
-    message("Dashboard cannot connect. Check config.js.");
+    message("Cannot connect to Supabase. Check config.js.");
     return;
   }
 
   message("Refreshing dashboard...");
-
   try {
     await loadDrivers();
     await loadBookings();
     message("Dashboard refreshed.");
-  } catch (error) {
-    console.error("Dashboard refresh error:", error);
-    message("Dashboard error: " + (error.message || String(error)));
+  } catch (e) {
+    console.error(e);
+    message("Dashboard error: " + (e.message || String(e)));
   }
 }
 
 async function loadDrivers() {
   const tbody = document.getElementById("driverRows");
-  tbody.innerHTML =
-    '<tr><td colspan="9" class="empty">Loading drivers...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading drivers...</td></tr>';
 
   const {data, error} = await db.from("drivers")
     .select("*").order("created_at", {ascending:false});
 
   if (error) {
-    console.error("Load drivers error:", error);
-    tbody.innerHTML =
-      '<tr><td colspan="9" class="empty">Could not load drivers: ' +
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Could not load drivers: ' +
       esc(error.message) + '</td></tr>';
-    return;
+    throw error;
   }
 
   drivers = data || [];
-
   if (!drivers.length) {
-    tbody.innerHTML =
-      '<tr><td colspan="9" class="empty">No drivers added yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No drivers added yet.</td></tr>';
     return;
   }
 
@@ -236,30 +222,20 @@ async function loadDrivers() {
       <td>${esc(d.phone)}</td>
       <td>${esc(d.vehicle_number)}</td>
       <td>${esc(d.vehicle_type)}</td>
-      <td>
-        <input class="email-input" type="email"
-          id="email-${esc(d.id)}"
-          value="${esc(d.email || "")}"
-          placeholder="driver@example.com">
-      </td>
-      <td>
-        <select id="phone-type-${esc(d.id)}">
-          <option value="normal_phone" ${d.phone_type==="normal_phone"||!d.phone_type?"selected":""}>Normal Phone</option>
-          <option value="smartphone" ${d.phone_type==="smartphone"?"selected":""}>Smartphone</option>
-        </select>
-      </td>
-      <td>
-        <select id="status-${esc(d.id)}">
-          <option value="active" ${d.status==="active"?"selected":""}>Active</option>
-          <option value="inactive" ${d.status==="inactive"?"selected":""}>Inactive</option>
-        </select>
-      </td>
-      <td>
-        <select id="approved-${esc(d.id)}">
-          <option value="false" ${d.approved===true?"":"selected"}>Not approved</option>
-          <option value="true" ${d.approved===true?"selected":""}>Approved</option>
-        </select>
-      </td>
+      <td><input class="email-input" type="email" id="email-${esc(d.id)}"
+        value="${esc(d.email || "")}" placeholder="driver@example.com"></td>
+      <td><select id="phone-type-${esc(d.id)}">
+        <option value="normal_phone" ${d.phone_type==="normal_phone"||!d.phone_type?"selected":""}>Normal Phone</option>
+        <option value="smartphone" ${d.phone_type==="smartphone"?"selected":""}>Smartphone</option>
+      </select></td>
+      <td><select id="status-${esc(d.id)}">
+        <option value="active" ${d.status==="active"?"selected":""}>Active</option>
+        <option value="inactive" ${d.status==="inactive"?"selected":""}>Inactive</option>
+      </select></td>
+      <td><select id="approved-${esc(d.id)}">
+        <option value="false" ${d.approved===true?"":"selected"}>Not approved</option>
+        <option value="true" ${d.approved===true?"selected":""}>Approved</option>
+      </select></td>
       <td><button onclick="saveDriver('${esc(d.id)}')">Save</button></td>
     </tr>
   `).join("");
@@ -276,7 +252,6 @@ async function saveDriver(id) {
       message("Please enter a valid email address.");
       return;
     }
-
     if (approved && !email) {
       message("Add the driver's email before approving portal access.");
       return;
@@ -288,23 +263,22 @@ async function saveDriver(id) {
       .select("id");
 
     if (error) throw error;
-
-    if (!data || !data.length) {
-      message("No driver was updated. Check admin permissions.");
-      return;
+    if (!data || data.length === 0) {
+      throw new Error("No driver row was updated. Check the drivers UPDATE RLS policy.");
     }
 
     message("Driver details saved successfully.");
     await loadDrivers();
     await loadBookings();
-  } catch (error) {
-    console.error("Save driver error:", error);
-    message("Could not save driver: " + error.message);
+  } catch (e) {
+    console.error("Save driver error:", e);
+    message("Could not save driver: " + e.message);
   }
 }
 
 document.getElementById("driverForm").addEventListener("submit", async event => {
   event.preventDefault();
+  if (!db) return message("Supabase is not connected.");
 
   try {
     const name = document.getElementById("driverName").value.trim();
@@ -321,74 +295,57 @@ document.getElementById("driverForm").addEventListener("submit", async event => 
     }
 
     const {error} = await db.from("drivers").insert({
-      name,
-      phone,
-      vehicle_number,
-      vehicle_type,
-      email:email || null,
-      phone_type,
-      status,
-      approved:false
+      name, phone, vehicle_number, vehicle_type,
+      email:email || null, phone_type, status, approved:false
     });
 
     if (error) throw error;
 
     event.target.reset();
     document.getElementById("vehicleType").value = "E-Rickshaw";
-    message("Driver added. Portal access remains unapproved until you approve it.");
+    message("Driver added. Portal access remains unapproved.");
     await loadDrivers();
     await loadBookings();
-  } catch (error) {
-    console.error("Add driver error:", error);
-    message("Could not add driver: " + error.message);
+  } catch (e) {
+    console.error("Add driver error:", e);
+    message("Could not add driver: " + e.message);
   }
 });
 
 function driverOptions(currentId) {
-  let html = '<option value="">Unassigned</option>';
-
   const eligible = drivers.filter(d =>
     d.status === "active" || String(d.id) === String(currentId)
   );
 
-  html += eligible.map(d => `
+  return '<option value="">Unassigned</option>' + eligible.map(d => `
     <option value="${esc(d.id)}" ${String(d.id)===String(currentId)?"selected":""}>
-      ${esc(d.name)} — ${esc(d.vehicle_number || "")}
-      ${d.status==="inactive"?" (Inactive)":""}
+      ${esc(d.name)} — ${esc(d.vehicle_number || "")}${d.status==="inactive"?" (Inactive)":""}
     </option>
   `).join("");
-
-  return html;
 }
 
 async function loadBookings() {
   const tbody = document.getElementById("bookingRows");
-  tbody.innerHTML =
-    '<tr><td colspan="13" class="empty">Loading bookings...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="12" class="empty">Loading bookings...</td></tr>';
 
   const {data, error} = await db.from("bookings")
     .select("*").order("created_at", {ascending:false});
 
   if (error) {
-    console.error("Load bookings error:", error);
-    tbody.innerHTML =
-      '<tr><td colspan="13" class="empty">Could not load bookings: ' +
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Could not load bookings: ' +
       esc(error.message) + '</td></tr>';
-    return;
+    throw error;
   }
 
   bookings = data || [];
-
   if (!bookings.length) {
-    tbody.innerHTML =
-      '<tr><td colspan="13" class="empty">No bookings yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">No bookings yet.</td></tr>';
     return;
   }
 
   tbody.innerHTML = bookings.map((b, index) => {
     const key = "booking-" + index;
     const statuses = ["pending", "accepted", "picked_up", "completed", "cancelled"];
-
     if (b.status && !statuses.includes(b.status)) statuses.push(b.status);
 
     return `
@@ -398,37 +355,19 @@ async function loadBookings() {
         <td>${esc(b.passenger_phone)}</td>
         <td>${esc(b.pickup)}</td>
         <td>${esc(b.destination)}</td>
-        <td>
-          <div class="fare-box">
-            <input class="fare-input" type="number" min="0" step="1"
-              id="fare-${key}" value="${esc(b.fare ?? "")}">
-            <button onclick="saveFare(${index})">Save</button>
-          </div>
-        </td>
-        <td>
-          <select id="ride-status-${key}">
-            ${statuses.map(s => `
-              <option value="${esc(s)}" ${b.status===s?"selected":""}>
-                ${esc(s.replaceAll("_", " "))}
-              </option>
-            `).join("")}
-          </select>
-          <button onclick="updateStatus(${index})">Save</button>
-        </td>
-        <td>
-          <select id="driver-${key}">
-            ${driverOptions(b.driver_id)}
-          </select>
-          <button onclick="assignDriver(${index})">Save</button>
-        </td>
+        <td><div class="fare-box">
+          <input class="fare-input" type="number" min="0" step="1"
+            id="fare-${key}" value="${esc(b.fare ?? "")}">
+          <button onclick="saveFare(${index})">Save</button>
+        </div></td>
+        <td><select id="ride-status-${key}">
+          ${statuses.map(s => `<option value="${esc(s)}" ${b.status===s?"selected":""}>
+            ${esc(s.replaceAll("_", " "))}</option>`).join("")}
+        </select><button onclick="updateStatus(${index})">Save</button></td>
+        <td><select id="driver-${key}">${driverOptions(b.driver_id)}</select>
+          <button onclick="assignDriver(${index})">Save</button></td>
         <td>${esc(b.payment_method || "Not selected")}</td>
         <td>${esc(b.payment_status || "pending")}</td>
-        <td>
-          ${String(b.payment_method || "").toLowerCase() === "esewa" &&
-            String(b.payment_status || "pending").toLowerCase() === "pending"
-            ? `<button onclick="verifyEsewa(${index})">Verify eSewa</button>`
-            : "—"}
-        </td>
         <td>${esc(dateText(b.pickup_time || b.picked_up_at))}</td>
         <td>${esc(dateText(b.completed_at))}</td>
       </tr>`;
@@ -439,33 +378,23 @@ async function saveFare(index) {
   try {
     const booking = bookings[index];
     const input = document.getElementById("fare-booking-" + index);
-
     if (!booking || !input || input.value.trim() === "") {
       message("Enter a fare first.");
       return;
     }
 
     const fare = Number(input.value);
-
     if (!Number.isFinite(fare) || fare < 0) {
-      message("Enter a valid fare.");
+      message("Enter a valid non-negative fare.");
       return;
     }
 
-    const {data, error} = await bookingUpdateQuery(booking, {fare});
-
-    if (error) throw error;
-
-    if (!data || !data.length) {
-      message("No booking was updated. Check admin permissions and booking ID.");
-      return;
-    }
-
+    await bookingUpdateQuery(booking, {fare});
     message("Fare saved successfully.");
     await loadBookings();
-  } catch (error) {
-    console.error("Save fare error:", error);
-    message("Could not save fare: " + error.message);
+  } catch (e) {
+    console.error("Save fare error:", e);
+    message("Could not save fare: " + e.message);
   }
 }
 
@@ -473,30 +402,20 @@ async function assignDriver(index) {
   try {
     const booking = bookings[index];
     const select = document.getElementById("driver-booking-" + index);
-
     if (!booking || !select) {
       message("Booking not found. Refresh the dashboard.");
       return;
     }
 
-    const driverId = select.value || null;
+    const driver_id = select.value || null;
+    if (driver_id && !confirm("Assign this driver to the booking?")) return;
 
-    if (driverId && !confirm("Assign this driver to the booking?")) return;
-
-    const {data, error} = await bookingUpdateQuery(booking, {driver_id:driverId});
-
-    if (error) throw error;
-
-    if (!data || !data.length) {
-      message("No booking was updated. Check admin permissions and booking ID.");
-      return;
-    }
-
+    await bookingUpdateQuery(booking, {driver_id});
     message("Driver assignment saved.");
     await loadBookings();
-  } catch (error) {
-    console.error("Assign driver error:", error);
-    message("Could not assign driver: " + error.message);
+  } catch (e) {
+    console.error("Assign driver error:", e);
+    message("Could not assign driver: " + e.message);
   }
 }
 
@@ -504,86 +423,41 @@ async function updateStatus(index) {
   try {
     const booking = bookings[index];
     const select = document.getElementById("ride-status-booking-" + index);
-
     if (!booking || !select) {
       message("Booking not found. Refresh the dashboard.");
       return;
     }
 
-    const status = select.value;
-
-    // Pickup and completion timestamps are controlled by the driver portal.
-    const {data, error} = await bookingUpdateQuery(booking, {status});
-
-    if (error) throw error;
-
-    if (!data || !data.length) {
-      message("No booking was updated. Check admin permissions and booking ID.");
-      return;
-    }
-
-    message("Booking status updated. Ride timestamps are controlled by the driver portal.");
+    await bookingUpdateQuery(booking, {status:select.value});
+    message("Booking status updated. Pickup and completion times remain controlled by the driver portal.");
     await loadBookings();
-  } catch (error) {
-    console.error("Update status error:", error);
-    message("Could not update booking status: " + error.message);
-  }
-}
-
-async function verifyEsewa(index) {
-  try {
-    const booking = bookings[index];
-
-    if (!booking ||
-        String(booking.payment_method || "").toLowerCase() !== "esewa" ||
-        String(booking.payment_status || "pending").toLowerCase() !== "pending") {
-      message("This booking is not awaiting eSewa verification.");
-      return;
-    }
-
-    if (!confirm("Have you confirmed that this eSewa payment was received?")) {
-      return;
-    }
-
-    const {data, error} = await bookingUpdateQuery(
-      booking,
-      {payment_status: "verified"}
-    );
-
-    if (error) throw error;
-
-    if (!data || !data.length) {
-      message("Payment was not updated. Refresh and check admin permissions.");
-      return;
-    }
-
-    message("eSewa payment verified successfully.");
-    await refreshDashboard();
-  } catch (error) {
-    console.error("Verify eSewa error:", error);
-    message("Could not verify payment: " + error.message);
+  } catch (e) {
+    console.error("Update status error:", e);
+    message("Could not update status: " + e.message);
   }
 }
 
 async function logout() {
   try {
+    if (!db) {
+      location.href = "admin.html";
+      return;
+    }
     const {error} = await db.auth.signOut();
-
     if (error) throw error;
-
     location.href = "admin.html";
-  } catch (error) {
-    console.error("Logout error:", error);
-    message("Logout failed: " + error.message);
+  } catch (e) {
+    console.error("Logout error:", e);
+    message("Logout failed: " + e.message);
   }
 }
 
 if (db) {
-  checkLogin().catch(error => {
-    console.error("MaliSafari dashboard error:", error);
-    message("Dashboard error: " + (error.message || String(error)));
+  checkLogin().catch(e => {
+    console.error("Dashboard error:", e);
+    message("Dashboard error: " + (e.message || String(e)));
     document.getElementById("bookingRows").innerHTML =
-      '<tr><td colspan="13" class="empty">Dashboard failed to load. Check the error message above.</td></tr>';
+      '<tr><td colspan="12" class="empty">Dashboard failed to load.</td></tr>';
   });
 }
 </script>
