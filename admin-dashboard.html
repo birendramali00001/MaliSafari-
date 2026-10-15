@@ -160,28 +160,18 @@ try {
     '<tr><td colspan="9" class="empty">Dashboard setup failed.</td></tr>';
 }
 
+/* FIX: Update a booking by its unique booking_id. */
 function bookingUpdateQuery(booking, updates) {
-  let query = db.from("bookings").update(updates);
-
-  const columns = [
-    "created_at",
-    "passenger_name",
-    "passenger_phone",
-    "pickup",
-    "destination",
-    "fare",
-    "status",
-    "driver_id"
-  ];
-
-  for (const column of columns) {
-    const value = booking[column];
-    query = value === null || value === undefined
-      ? query.is(column, null)
-      : query.eq(column, value);
+  if (!booking || !booking.booking_id) {
+    throw new Error(
+      "Booking ID is missing. Refresh the dashboard and try again."
+    );
   }
 
-  return query.select("created_at");
+  return db.from("bookings")
+    .update(updates)
+    .eq("booking_id", booking.booking_id)
+    .select("booking_id");
 }
 
 async function checkLogin() {
@@ -467,7 +457,7 @@ async function saveFare(index) {
     if (error) throw error;
 
     if (!data || !data.length) {
-      message("No booking matched the original details. Refresh and try again.");
+      message("No booking was updated. Check admin permissions and booking ID.");
       return;
     }
 
@@ -498,7 +488,7 @@ async function assignDriver(index) {
     if (error) throw error;
 
     if (!data || !data.length) {
-      message("No booking matched the original details. Refresh and try again.");
+      message("No booking was updated. Check admin permissions and booking ID.");
       return;
     }
 
@@ -528,7 +518,7 @@ async function updateStatus(index) {
     if (error) throw error;
 
     if (!data || !data.length) {
-      message("No booking matched the original details. Refresh and try again.");
+      message("No booking was updated. Check admin permissions and booking ID.");
       return;
     }
 
