@@ -1,330 +1,437 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MaliSafari Passenger Portal</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaliSafari | Book an E-Rickshaw</title>
+<meta name="theme-color" content="#087f5b">
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f1f6f3;font-family:Arial,sans-serif;color:#19372b}
-header{background:#087f5b;color:white;text-align:center;padding:24px 12px}
-header h1{margin:0 0 8px}
-main{max-width:600px;margin:22px auto;padding:0 14px}
-.card{background:white;padding:20px;border-radius:14px;margin-bottom:18px;box-shadow:0 3px 15px #0001}
-h2{margin-top:0}
-label{display:block;margin-top:12px;font-size:14px}
-input,select,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;font-size:16px}
-input,select{border:1px solid #cbd5d0;background:white}
-button{border:0;background:#087f5b;color:white;font-weight:bold;cursor:pointer}
-button.secondary{background:#e6f2eb;color:#086447}
-button:disabled{opacity:.6}
-.hidden{display:none!important}
-#message{padding:12px;border-radius:8px;margin-bottom:14px;overflow-wrap:anywhere}
-.error{background:#fff0f0;color:#a11}
-.success{background:#e6f8eb;color:#176b36}
-.note{font-size:13px;color:#66756d;line-height:1.5}
-footer{text-align:center;padding:18px;color:#66756d;font-size:13px}
+:root {
+  --green: #087f5b;
+  --green-dark: #066747;
+  --light: #f2fbf6;
+  --text: #17251f;
+  --muted: #68776f;
+  --border: #dce8e0;
+  --red: #b42318;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--light);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+header {
+  background: var(--green);
+  color: white;
+  padding: 22px 16px 30px;
+  text-align: center;
+}
+.logo {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+header p {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+main {
+  width: min(100% - 24px, 540px);
+  margin: -14px auto 30px;
+}
+.card {
+  background: white;
+  padding: 22px 18px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  box-shadow: 0 5px 22px #1233220b;
+}
+h1 {
+  font-size: 23px;
+  margin: 0 0 7px;
+}
+.intro {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 22px;
+}
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 16px 0 7px;
+}
+input, select {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid #cbd9d0;
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+}
+input:focus, select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px #087f5b18;
+}
+.route {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.fare {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #eff9f2;
+}
+.fare small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.fare strong {
+  color: var(--green-dark);
+  font-size: 25px;
+}
+.note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--green);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover { background: var(--green-dark); }
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+.message {
+  display: none;
+  margin-top: 17px;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.message.success {
+  display: block;
+  background: #eaf8ef;
+  color: #075c36;
+  border: 1px solid #b8e4c8;
+}
+.message.error {
+  display: block;
+  background: #fff0ef;
+  color: var(--red);
+  border: 1px solid #f3c5c1;
+}
+footer {
+  text-align: center;
+  color: var(--muted);
+  padding: 8px 15px 26px;
+  font-size: 12px;
+}
+@media (max-width: 390px) {
+  .route { grid-template-columns: 1fr; gap: 0; }
+  .card { padding: 19px 14px; }
+}
 </style>
 </head>
 <body>
+
 <header>
-<h1>🛺 MaliSafari</h1>
-<p>Passenger Registration & Ride Booking</p>
+  <div class="logo">🛺 MaliSafari</div>
+  <p>Your local e-rickshaw booking service</p>
 </header>
 
 <main>
-<div id="message" class="hidden" role="status"></div>
+  <section class="card">
+    <h1>Book your ride</h1>
+    <p class="intro">
+      Enter your journey details below. MaliSafari will receive your booking
+      and arrange follow-up.
+    </p>
 
-<section id="authSection" class="card">
-<h2 id="authTitle">Passenger Login</h2>
+    <form id="bookingForm">
+      <label for="passengerName">Passenger name</label>
+      <input
+        id="passengerName"
+        name="passengerName"
+        type="text"
+        maxlength="100"
+        autocomplete="name"
+        placeholder="Enter your full name"
+        required
+      >
 
-<div id="nameArea" class="hidden">
-<label for="fullName">Full name</label>
-<input id="fullName" maxlength="100" autocomplete="name" placeholder="Enter your full name">
-</div>
+      <label for="passengerPhone">Mobile number</label>
+      <input
+        id="passengerPhone"
+        name="passengerPhone"
+        type="tel"
+        maxlength="20"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="Enter your phone number"
+        required
+      >
 
-<label for="phone">Phone number</label>
-<input id="phone" type="tel" autocomplete="tel" placeholder="+97798XXXXXXXX">
+      <div class="route">
+        <div>
+          <label for="pickup">Pickup location</label>
+          <input
+            id="pickup"
+            name="pickup"
+            type="text"
+            maxlength="200"
+            placeholder="Where should we pick you up?"
+            required
+          >
+        </div>
+        <div>
+          <label for="destination">Destination</label>
+          <input
+            id="destination"
+            name="destination"
+            type="text"
+            maxlength="200"
+            placeholder="Where are you going?"
+            required
+          >
+        </div>
+      </div>
 
-<label for="password">Password</label>
-<input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters">
+      <label for="pickupTime">Pickup date and time</label>
+      <input
+        id="pickupTime"
+        name="pickupTime"
+        type="datetime-local"
+        required
+      >
 
-<div id="otpArea" class="hidden">
-<label for="otp">SMS verification code</label>
-<input id="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter code">
-</div>
+      <label for="paymentMethod">Payment method</label>
+      <select id="paymentMethod" name="paymentMethod" required>
+        <option value="Cash">Cash</option>
+        <option value="eSewa">eSewa</option>
+      </select>
 
-<button id="mainBtn" type="button" onclick="mainAction()">Login</button>
-<button id="switchBtn" class="secondary" type="button" onclick="switchMode()">Create New Account</button>
+      <div class="fare">
+        <div>
+          <small>Starting displayed fare</small>
+          <strong>Rs. <span id="fareAmount">50</span></strong>
+        </div>
+        <span aria-hidden="true" style="font-size:28px">🛺</span>
+      </div>
+      <p class="note">
+        This is the initial fare shown by the portal, not an automatic
+        distance-based quotation. Confirm the final fare with MaliSafari.
+        eSewa is not verified by this form.
+      </p>
 
-<p class="note">New passengers must register before booking. Phone registration requires phone authentication and SMS verification to be enabled in Supabase.</p>
-</section>
-
-<section id="portalSection" class="hidden">
-<div class="card">
-<h2 id="welcome">Welcome</h2>
-<p>You are logged in.</p>
-<button class="secondary" onclick="logout()">Logout</button>
-</div>
-
-<div class="card">
-<h2>Book Your Ride</h2>
-<form id="bookingForm">
-<label for="pickup">Pickup location</label>
-<input id="pickup" maxlength="250" required placeholder="Enter pickup location">
-
-<label for="destination">Destination</label>
-<input id="destination" maxlength="250" required placeholder="Enter destination">
-
-<label for="pickupTime">Preferred pickup date and time</label>
-<input id="pickupTime" type="datetime-local">
-
-<label for="payment">Payment method</label>
-<select id="payment">
-<option value="cash">Cash</option>
-<option value="esewa">eSewa</option>
-</select>
-
-<button id="bookBtn" type="submit">Confirm Booking</button>
-</form>
-<p class="note">MaliSafari will contact you to confirm the fare and driver.</p>
-</div>
-
-<div class="card">
-<h2>My Bookings</h2>
-<p class="note">Private booking history will be enabled after the passenger account is securely linked to the bookings database.</p>
-</div>
-</section>
+      <button id="submitButton" type="submit">Confirm Booking</button>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </form>
+  </section>
 </main>
 
-<footer>MaliSafari · Biratnagar, Nepal</footer>
+<footer>
+  MaliSafari Passenger Portal · Please provide a reachable phone number.
+</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+"use strict";
+
+/* Your existing MaliSafari Supabase project */
 const SUPABASE_URL = "https://mtblgpkirgwytiylenrg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
 
-let db = null;
-let mode = "login";
-let currentUser = null;
-let pendingPhone = "";
-let pendingName = "";
+/* Change this value if the initial displayed fare changes. */
+const DEFAULT_FARE = 50;
 
-const $ = id => document.getElementById(id);
+const form = document.getElementById("bookingForm");
+const submitButton = document.getElementById("submitButton");
+const message = document.getElementById("message");
+const pickupTimeInput = document.getElementById("pickupTime");
 
-function showMessage(text,type="error"){
-  $("message").textContent=text;
-  $("message").className=type;
-  $("message").scrollIntoView({behavior:"smooth",block:"nearest"});
-}
-function clearMessage(){
-  $("message").textContent="";
-  $("message").className="hidden";
-}
-function phoneValue(){
-  return $("phone").value.trim().replace(/[ ()-]/g,"");
-}
-function switchMode(){
-  clearMessage();
-  mode = mode === "login" ? "register" : "login";
-  $("authTitle").textContent = mode === "login" ? "Passenger Login" : "Create Passenger Account";
-  $("nameArea").classList.toggle("hidden",mode !== "register");
-  $("mainBtn").textContent = mode === "login" ? "Login" : "Register";
-  $("switchBtn").textContent = mode === "login" ? "Create New Account" : "Back to Login";
-  $("password").value="";
-  $("otpArea").classList.add("hidden");
-}
-function enterPortal(user){
-  currentUser=user;
-  $("authSection").classList.add("hidden");
-  $("portalSection").classList.remove("hidden");
-  $("welcome").textContent="Welcome, "+(user.user_metadata?.full_name || "Passenger");
-  clearMessage();
-}
-async function mainAction(){
-  clearMessage();
-  if(!db){
-    showMessage("Supabase did not initialize. Please refresh the page.");
-    return;
-  }
-  if($("otpArea").classList.contains("hidden")){
-    if(mode==="login") return login();
-    return register();
-  }
-  return verifyRegistration();
-}
-async function register(){
-  const name=$("fullName").value.trim();
-  const phone=phoneValue();
-  const password=$("password").value;
+document.getElementById("fareAmount").textContent = DEFAULT_FARE;
 
-  if(!name||!phone||!password){
-    showMessage("Enter your name, phone number and password.");
-    return;
+/* Set the earliest pickup time to the current local time. */
+function setMinimumPickupTime() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+
+  const localValue = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 16);
+
+  pickupTimeInput.min = localValue;
+
+  if (!pickupTimeInput.value || pickupTimeInput.value < localValue) {
+    pickupTimeInput.value = localValue;
   }
-  if(!/^\+[1-9]\d{7,14}$/.test(phone)){
-    showMessage("Use international phone format, for example +97798XXXXXXXX.");
-    return;
-  }
-  if(password.length<8){
-    showMessage("Password must be at least 8 characters.");
-    return;
+}
+setMinimumPickupTime();
+
+let supabaseClient = null;
+
+try {
+  if (!window.supabase || !window.supabase.createClient) {
+    throw new Error("The Supabase library did not load. Check your internet connection.");
   }
 
-  $("mainBtn").disabled=true;
-  try{
-    const {data,error}=await db.auth.signUp({
-      phone,
-      password,
-      options:{data:{full_name:name,phone}}
-    });
-    if(error) throw error;
-
-    pendingPhone=phone;
-    pendingName=name;
-
-    if(data.session && data.user){
-      enterPortal(data.user);
-      showMessage("Account created successfully.","success");
-    }else{
-      $("otpArea").classList.remove("hidden");
-      $("mainBtn").textContent="Verify Phone";
-      showMessage("Enter the SMS verification code sent to your phone.","success");
-    }
-  }catch(e){
-    showMessage("Registration failed: "+e.message);
-  }finally{
-    $("mainBtn").disabled=false;
-  }
-}
-async function verifyRegistration(){
-  const token=$("otp").value.trim();
-  if(!token){
-    showMessage("Enter the verification code.");
-    return;
-  }
-  try{
-    const {data,error}=await db.auth.verifyOtp({
-      phone:pendingPhone || phoneValue(),
-      token,
-      type:"sms"
-    });
-    if(error) throw error;
-    enterPortal(data.user);
-    showMessage("Phone verified. Welcome to MaliSafari!","success");
-  }catch(e){
-    showMessage("Verification failed: "+e.message);
-  }
-}
-async function login(){
-  const phone=phoneValue();
-  const password=$("password").value;
-  if(!phone||!password){
-    showMessage("Enter your phone number and password.");
-    return;
-  }
-  try{
-    const {data,error}=await db.auth.signInWithPassword({phone,password});
-    if(error) throw error;
-    enterPortal(data.user);
-  }catch(e){
-    showMessage("Login failed: "+e.message);
-  }
-}
-async function logout(){
-  const {error}=await db.auth.signOut();
-  if(error){
-    showMessage("Logout failed: "+error.message);
-    return;
-  }
-  currentUser=null;
-  $("portalSection").classList.add("hidden");
-  $("authSection").classList.remove("hidden");
-  $("password").value="";
-  $("otpArea").classList.add("hidden");
-  mode="login";
-  $("authTitle").textContent="Passenger Login";
-  $("nameArea").classList.add("hidden");
-  $("mainBtn").textContent="Login";
-  $("switchBtn").textContent="Create New Account";
-  showMessage("Logged out successfully.","success");
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+} catch (error) {
+  showMessage(error.message || "Could not initialize the booking service.", "error");
 }
 
-$("bookingForm").addEventListener("submit",async function(event){
+function showMessage(text, type) {
+  message.textContent = text;
+  message.className = "message " + type;
+  message.style.display = "block";
+}
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+form.addEventListener("submit", async function (event) {
   event.preventDefault();
-  clearMessage();
 
-  if(!currentUser){
-    showMessage("Please log in first.");
+  if (!supabaseClient) {
+    showMessage(
+      "The booking service is not ready. Refresh the page and try again.",
+      "error"
+    );
     return;
   }
 
-  const pickup=$("pickup").value.trim();
-  const destination=$("destination").value.trim();
-  const time=$("pickupTime").value;
+  const passengerName = cleanText(
+    document.getElementById("passengerName").value
+  );
+  const passengerPhone = cleanText(
+    document.getElementById("passengerPhone").value
+  );
+  const pickup = cleanText(document.getElementById("pickup").value);
+  const destination = cleanText(document.getElementById("destination").value);
+  const pickupTime = pickupTimeInput.value;
+  const paymentMethod = document.getElementById("paymentMethod").value;
 
-  if(!pickup||!destination){
-    showMessage("Enter pickup and destination.");
+  if (!passengerName || !passengerPhone || !pickup || !destination || !pickupTime) {
+    showMessage("Please complete every required field.", "error");
     return;
   }
-  if(pickup.toLowerCase()===destination.toLowerCase()){
-    showMessage("Pickup and destination cannot be the same.");
+
+  if (pickup.toLowerCase() === destination.toLowerCase()) {
+    showMessage("Pickup and destination cannot be the same.", "error");
     return;
   }
 
-  const booking={
-    passenger_name:currentUser.user_metadata?.full_name || "Passenger",
-    passenger_phone:currentUser.phone || currentUser.user_metadata?.phone || pendingPhone,
-    pickup,
-    destination,
-    fare:0,
-    status:"pending",
-    payment_method:$("payment").value
+  if (pickupTime < pickupTimeInput.min) {
+    showMessage("Please select the current or a future pickup time.", "error");
+    return;
+  }
+
+  if (!["Cash", "eSewa"].includes(paymentMethod)) {
+    showMessage("Please select a valid payment method.", "error");
+    return;
+  }
+
+  /*
+   * These field names match the existing bookings columns reported
+   * for your MaliSafari Supabase project.
+   */
+  const booking = {
+    passenger_name: passengerName,
+    passenger_phone: passengerPhone,
+    pickup: pickup,
+    destination: destination,
+    pickup_time: pickupTime,
+    payment_method: paymentMethod,
+    payment_status: "pending",
+    fare: DEFAULT_FARE,
+    status: "pending"
   };
 
-  if(time){
-    const date=new Date(time);
-    if(Number.isNaN(date.getTime())||date.getTime()<Date.now()-60000){
-      showMessage("Choose a future pickup time.");
-      return;
-    }
-    booking.pickup_time=date.toISOString();
-  }
+  submitButton.disabled = true;
+  submitButton.textContent = "Submitting...";
+  message.style.display = "none";
 
-  $("bookBtn").disabled=true;
-  $("bookBtn").textContent="Submitting...";
-  try{
-    let result=await db.from("bookings").insert(booking);
-    if(result.error && /payment_method|column/i.test(result.error.message)){
-      delete booking.payment_method;
-      result=await db.from("bookings").insert(booking);
+  try {
+    const { error } = await supabaseClient
+      .from("bookings")
+      .insert([booking]);
+
+    if (error) {
+      console.error("MaliSafari booking error:", error);
+      throw error;
     }
-    if(result.error) throw result.error;
-    $("bookingForm").reset();
-    showMessage("Booking submitted successfully! MaliSafari will contact you.","success");
-  }catch(e){
-    showMessage("Booking failed: "+e.message);
-  }finally{
-    $("bookBtn").disabled=false;
-    $("bookBtn").textContent="Confirm Booking";
+
+    form.reset();
+    setMinimumPickupTime();
+
+    showMessage(
+      "Booking submitted successfully! Your request has been sent to MaliSafari. " +
+      "Please keep your phone available for confirmation. " +
+      "Your booking is pending until it is accepted. " +
+      (paymentMethod === "eSewa"
+        ? "Your eSewa payment has NOT been verified by this form."
+        : "Please confirm the final fare with MaliSafari."),
+      "success"
+    );
+
+  } catch (error) {
+    console.error("Booking submission failed:", error);
+
+    let reason = error && error.message
+      ? error.message
+      : "Unknown error";
+
+    if (error && error.code === "42501") {
+      reason = "Supabase denied the booking. Check the bookings INSERT policy.";
+    } else if (error && error.code === "23502") {
+      reason = "A required database field is missing. The table needs to be checked.";
+    } else if (error && error.code === "23514") {
+      reason = "A booking value was rejected by a database constraint.";
+    }
+
+    showMessage(
+      "Booking could not be submitted. " + reason +
+      " Your booking has not been confirmed. Please try again.",
+      "error"
+    );
+
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Confirm Booking";
   }
 });
-
-async function initialize(){
-  if(!window.supabase){
-    showMessage("Supabase library failed to load. Check your internet connection.");
-    return;
-  }
-  try{
-    db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data,error}=await db.auth.getSession();
-    if(error) throw error;
-    if(data.session) enterPortal(data.session.user);
-  }catch(e){
-    showMessage("Supabase setup error: "+e.message);
-  }
-}
-initialize();
 </script>
 </body>
 </html>
