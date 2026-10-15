@@ -28,7 +28,7 @@ button:disabled{opacity:.6}
 .msg.err{display:block;background:#fff0ef;color:#a42119}
 .route{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fare{margin-top:16px;padding:15px;background:#eff9f2;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
-.fare strong{font-size:24px;color:#066747}
+.fare strong{font-size:22px;color:#066747}
 .ride{padding:13px 0;border-top:1px solid #e1e9e3;font-size:14px;line-height:1.7;overflow-wrap:anywhere}
 .tag{display:inline-block;background:#eaf5ed;color:#075d40;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:bold}
 footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
@@ -73,10 +73,10 @@ footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
 <option value="esewa">eSewa</option>
 </select>
 <div class="fare">
-<div><div class="muted">Initial displayed fare</div><strong id="fareDisplay">Rs. 50</strong></div>
+<div><div class="muted">Your ride fare</div><strong id="fareDisplay">Waiting for admin</strong></div>
 <span style="font-size:27px">🛺</span>
 </div>
-<p class="muted">Rs. 50 is the initial fare recorded for a new request. The admin can adjust the fare on the booking. This is not a distance-based quote. Selecting eSewa does not verify payment.</p>
+<p class="muted">Submit your ride request first. MaliSafari admin will review your request and set the fare when accepting the ride. The fare will appear in My Rides after it has been set. Selecting eSewa does not verify payment.</p>
 <button id="bookBtn" type="submit">Confirm Booking</button>
 <div id="bookingMessage" class="msg" role="status"></div>
 </form>
@@ -98,7 +98,7 @@ footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
 "use strict";
 const SUPABASE_URL="https://mtblgpkirgwytiylenrg.supabase.co";
 const SUPABASE_KEY="sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
-const DEFAULT_FARE=50;
+const DEFAULT_FARE=0;
 const $=id=>document.getElementById(id);
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
@@ -278,7 +278,8 @@ title.textContent=(ride.pickup||"Pickup")+" → "+(ride.destination||"Destinatio
 item.appendChild(title);
 item.appendChild(document.createElement("br"));
 const details=document.createElement("span");
-details.textContent="Pickup time: "+formatDate(ride.pickup_time)+" | Fare: Rs. "+(ride.fare??DEFAULT_FARE);
+const fareText=(ride.fare===null||ride.fare===undefined||Number(ride.fare)<=0)?"Fare: Waiting for admin to set fare":"Fare: Rs. "+ride.fare;
+details.textContent="Pickup time: "+formatDate(ride.pickup_time)+" | "+fareText;
 item.appendChild(details);
 item.appendChild(document.createElement("br"));
 const status=document.createElement("span");
