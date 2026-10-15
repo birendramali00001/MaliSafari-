@@ -20,8 +20,8 @@ label{display:block;font-weight:bold;font-size:14px;margin:15px 0 7px}
 input,select{width:100%;min-height:47px;border:1px solid #cbd9d0;border-radius:9px;padding:11px;font-size:16px;background:white}
 button{width:100%;border:0;border-radius:9px;background:#087f5b;color:white;font-size:16px;font-weight:bold;padding:14px;margin-top:15px;cursor:pointer}
 button:disabled{opacity:.6}
-button.secondary{background:#e8f4ec;color:#075d40}
-button.logout{background:#fcebea;color:#a42119}
+.secondary{background:#e8f4ec;color:#075d40}
+.logout{background:#fcebea;color:#a42119}
 .hidden{display:none!important}
 .msg{display:none;padding:12px;border-radius:9px;margin-top:13px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .msg.ok{display:block;background:#eaf8ef;color:#075c36}
@@ -30,7 +30,6 @@ button.logout{background:#fcebea;color:#a42119}
 .fare{margin-top:16px;padding:15px;background:#eff9f2;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
 .fare strong{font-size:24px;color:#066747}
 .ride{padding:13px 0;border-top:1px solid #e1e9e3;font-size:14px;line-height:1.7;overflow-wrap:anywhere}
-.ride:first-child{border-top:0}
 .tag{display:inline-block;background:#eaf5ed;color:#075d40;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:bold}
 footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
 @media(max-width:390px){.route{grid-template-columns:1fr;gap:0}.card{padding:16px}}
@@ -38,92 +37,81 @@ footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
 </head>
 <body>
 <header>
-  <h1>🛺 MaliSafari</h1>
-  <p>Your passenger account and e-rickshaw booking portal</p>
+<h1>🛺 MaliSafari</h1>
+<p>Your passenger account and e-rickshaw booking portal</p>
 </header>
 
 <main>
-  <section class="card" id="authPanel">
-    <h2 id="authTitle">Passenger Login</h2>
-    <p class="muted" id="authHelp">Log in with your registered phone number and password to book a ride.</p>
+<section class="card" id="authPanel">
+<h2 id="authTitle">Passenger Login</h2>
+<p class="muted" id="authHelp">Log in with your email and password.</p>
 
-    <label for="phone">Phone number</label>
-    <input id="phone" type="tel" inputmode="tel" autocomplete="tel"
-      placeholder="98XXXXXXXX" maxlength="20">
+<label for="email">Email address</label>
+<input id="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254">
 
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password"
-      placeholder="Enter your password" minlength="8" maxlength="72">
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters" minlength="8" maxlength="72">
 
-    <div id="registerExtra" class="hidden">
-      <p class="muted">Create a password with at least 8 characters. Keep it private.</p>
-    </div>
+<p id="registerHelp" class="muted hidden">Use an email address you can access. If email confirmation is requested, check your inbox before logging in.</p>
 
-    <button id="loginBtn" type="button">Log In</button>
-    <button id="registerBtn" class="secondary" type="button">Create Passenger Account</button>
+<button id="loginBtn" type="button">Log In</button>
+<button id="registerBtn" class="secondary" type="button">Create Passenger Account</button>
+<div id="authMessage" class="msg" role="status"></div>
+</section>
 
-    <div id="otpPanel" class="hidden">
-      <p class="muted">Enter the SMS verification code sent to your phone.</p>
-      <label for="otp">SMS verification code</label>
-      <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
-        maxlength="10" placeholder="Enter verification code">
-      <button id="verifyBtn" type="button">Verify Phone & Continue</button>
-    </div>
-    <div id="authMessage" class="msg" role="status" aria-live="polite"></div>
-  </section>
+<section id="bookingPanel" class="hidden">
+<div class="card">
+<h2>Book Your Ride</h2>
+<p class="muted">Logged in as <strong id="accountEmail"></strong></p>
+<button id="logoutBtn" class="logout" type="button">Log Out</button>
 
-  <section id="bookingPanel" class="hidden">
-    <div class="card">
-      <h2>Book your ride</h2>
-      <p class="muted">Signed in as <strong id="accountPhone"></strong>. Your booking will be linked to this account.</p>
-      <button id="logoutBtn" class="logout" type="button">Log Out</button>
+<form id="bookingForm">
+<label for="passengerName">Passenger name</label>
+<input id="passengerName" maxlength="100" autocomplete="name" placeholder="Your full name" required>
 
-      <form id="bookingForm">
-        <label for="passengerName">Passenger name</label>
-        <input id="passengerName" maxlength="100" autocomplete="name"
-          placeholder="Your full name" required>
+<label for="passengerPhone">Contact phone number</label>
+<input id="passengerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="98XXXXXXXX" maxlength="20" required>
 
-        <div class="route">
-          <div>
-            <label for="pickup">Pickup location</label>
-            <input id="pickup" maxlength="200" placeholder="Pickup address" required>
-          </div>
-          <div>
-            <label for="destination">Destination</label>
-            <input id="destination" maxlength="200" placeholder="Destination" required>
-          </div>
-        </div>
+<div class="route">
+<div>
+<label for="pickup">Pickup location</label>
+<input id="pickup" maxlength="200" placeholder="Pickup address" required>
+</div>
+<div>
+<label for="destination">Destination</label>
+<input id="destination" maxlength="200" placeholder="Destination" required>
+</div>
+</div>
 
-        <label for="pickupTime">Pickup date and time</label>
-        <input id="pickupTime" type="datetime-local" required>
+<label for="pickupTime">Pickup date and time</label>
+<input id="pickupTime" type="datetime-local" required>
 
-        <label for="paymentMethod">Payment method</label>
-        <select id="paymentMethod" required>
-          <option value="Cash">Cash</option>
-          <option value="eSewa">eSewa</option>
-        </select>
+<label for="paymentMethod">Payment method</label>
+<select id="paymentMethod" required>
+<option value="Cash">Cash</option>
+<option value="eSewa">eSewa</option>
+</select>
 
-        <div class="fare">
-          <div><div class="muted">Initial displayed fare</div><strong>Rs. 50</strong></div>
-          <span style="font-size:27px">🛺</span>
-        </div>
-        <p class="muted">Rs. 50 is the initial displayed fare, not an automatic distance-based quote. Confirm the final fare with MaliSafari. Choosing eSewa here does not verify payment.</p>
+<div class="fare">
+<div><div class="muted">Initial displayed fare</div><strong>Rs. 50</strong></div>
+<span style="font-size:27px">🛺</span>
+</div>
+<p class="muted">Rs. 50 is the initial displayed fare, not a distance-based quote. Confirm the final fare with MaliSafari. Selecting eSewa does not verify payment.</p>
 
-        <button id="bookBtn" type="submit">Confirm Booking</button>
-        <div id="bookingMessage" class="msg" role="status" aria-live="polite"></div>
-      </form>
-    </div>
+<button id="bookBtn" type="submit">Confirm Booking</button>
+<div id="bookingMessage" class="msg" role="status"></div>
+</form>
+</div>
 
-    <div class="card">
-      <h2>My rides</h2>
-      <p class="muted">Only bookings linked to your account are shown here.</p>
-      <button id="refreshBtn" class="secondary" type="button">Refresh My Rides</button>
-      <div id="ridesList" class="muted" style="margin-top:14px">Loading rides...</div>
-      <div id="ridesMessage" class="msg" role="status" aria-live="polite"></div>
-    </div>
-  </section>
+<div class="card">
+<h2>My Rides</h2>
+<p class="muted">Your bookings linked to this account.</p>
+<button id="refreshBtn" class="secondary" type="button">Refresh My Rides</button>
+<div id="ridesList" class="muted" style="margin-top:14px">Loading rides...</div>
+<div id="ridesMessage" class="msg" role="status"></div>
+</div>
+</section>
 </main>
-
 <footer>MaliSafari Passenger Portal</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -133,226 +121,177 @@ footer{text-align:center;color:#6b786f;font-size:12px;padding:5px 15px 25px}
 const SUPABASE_URL = "https://mtblgpkirgwytiylenrg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fW5mkTBuEKJVXc7_3Olv4w_uRA5aQ90";
 const DEFAULT_FARE = 50;
-
 const $ = id => document.getElementById(id);
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
-let pendingPhone = "";
 let mode = "login";
 
-function message(id, text, type) {
-  const el = $(id);
-  el.textContent = text;
-  el.className = "msg " + type;
+function showMessage(id, text, type) {
+  $(id).textContent = text;
+  $(id).className = "msg " + type;
 }
-
 function clearMessage(id) {
   $(id).textContent = "";
   $(id).className = "msg";
 }
-
-function setBusy(id, busy, busyText, normalText) {
-  $(id).disabled = busy;
-  $(id).textContent = busy ? busyText : normalText;
+function busy(id, yes, busyText, normalText) {
+  $(id).disabled = yes;
+  $(id).textContent = yes ? busyText : normalText;
 }
-
-function normalizePhone(raw) {
-  let p = String(raw || "").replace(/[\s()-]/g, "");
-  if (p.startsWith("+977")) return p;
-  if (p.startsWith("00977")) return "+" + p.slice(2);
-  if (p.startsWith("977")) return "+" + p;
-  if (p.startsWith("0")) p = p.slice(1);
-  if (/^9\d{9}$/.test(p)) return "+977" + p;
-  throw new Error("Enter a valid Nepali mobile number, such as 98XXXXXXXX or +97798XXXXXXXX.");
+function showMode(next) {
+  mode = next;
+  $("authTitle").textContent = mode === "register" ? "Create Passenger Account" : "Passenger Login";
+  $("authHelp").textContent = mode === "register"
+    ? "Register using your email and create a password."
+    : "Log in with your registered email and password.";
+  $("registerHelp").classList.toggle("hidden", mode !== "register");
+  $("registerBtn").classList.toggle("hidden", mode === "register");
+  $("loginBtn").classList.toggle("hidden", mode === "register");
+  $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
+  clearMessage("authMessage");
 }
-
+function render() {
+  $("authPanel").classList.toggle("hidden", !!currentUser);
+  $("bookingPanel").classList.toggle("hidden", !currentUser);
+  if (currentUser) $("accountEmail").textContent = currentUser.email || "Passenger";
+}
+function setPickupMinimum() {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+  $("pickupTime").min = local;
+  if (!$("pickupTime").value || $("pickupTime").value < local) $("pickupTime").value = local;
+}
+async function loadSession() {
+  const {data, error} = await db.auth.getSession();
+  if (error) {
+    showMessage("authMessage", error.message, "err");
+    return;
+  }
+  currentUser = data.session ? data.session.user : null;
+  render();
+  if (currentUser) loadRides();
+}
+function validEmail() {
+  const email = $("email").value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
+  return email;
+}
 function validPassword() {
   const p = $("password").value;
   if (p.length < 8) throw new Error("Password must contain at least 8 characters.");
   return p;
 }
-
-function showAuthMode(nextMode) {
-  mode = nextMode;
-  $("authTitle").textContent = mode === "register" ? "Create Passenger Account" : "Passenger Login";
-  $("authHelp").textContent = mode === "register"
-    ? "Register with your phone number and create a password. Verify your phone if prompted."
-    : "Log in with your registered phone number and password to book a ride.";
-  $("registerExtra").classList.toggle("hidden", mode !== "register");
-  $("registerBtn").classList.toggle("hidden", mode === "register");
-  $("loginBtn").classList.toggle("hidden", mode === "register");
-  $("password").autocomplete = mode === "register" ? "new-password" : "current-password";
-  $("otpPanel").classList.add("hidden");
-  clearMessage("authMessage");
-}
-
-function renderUI() {
-  $("authPanel").classList.toggle("hidden", !!currentUser);
-  $("bookingPanel").classList.toggle("hidden", !currentUser);
-  if (currentUser) {
-    $("accountPhone").textContent = currentUser.phone || "Registered passenger";
-  }
-}
-
-function setMinimumPickupTime() {
-  const now = new Date();
-  now.setSeconds(0, 0);
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    .toISOString().slice(0, 16);
-  $("pickupTime").min = local;
-  if (!$("pickupTime").value || $("pickupTime").value < local) {
-    $("pickupTime").value = local;
-  }
-}
-
-async function syncSession() {
-  const { data, error } = await supabaseClient.auth.getSession();
-  if (error) {
-    message("authMessage", error.message, "err");
-    return;
-  }
-  currentUser = data.session ? data.session.user : null;
-  renderUI();
-  if (currentUser) loadRides();
+function validNepaliPhone(raw) {
+  let p = String(raw || "").replace(/[\s()-]/g, "");
+  if (p.startsWith("+977")) p = p.slice(4);
+  else if (p.startsWith("00977")) p = p.slice(5);
+  else if (p.startsWith("977")) p = p.slice(3);
+  if (p.startsWith("0")) p = p.slice(1);
+  if (!/^9[678]\d{8}$/.test(p)) throw new Error("Enter a valid Nepali mobile number, such as 98XXXXXXXX.");
+  return "+977" + p;
 }
 
 $("registerBtn").addEventListener("click", async () => {
   clearMessage("authMessage");
-  setBusy("registerBtn", true, "Registering...", "Create Passenger Account");
-
+  busy("registerBtn", true, "Registering...", "Create Passenger Account");
   try {
-    const phone = normalizePhone($("phone").value);
+    const email = validEmail();
     const password = validPassword();
-    pendingPhone = phone;
-
-    const { data, error } = await supabaseClient.auth.signUp({
-      phone,
-      password
-    });
+    const {data, error} = await db.auth.signUp({email, password});
     if (error) throw error;
 
-    if (data.session) {
-      currentUser = data.session.user;
-      renderUI();
-      setMinimumPickupTime();
-      message("bookingMessage", "Your account is ready. You can book a ride now.", "ok");
+    if (data.session && data.user) {
+      currentUser = data.user;
+      render();
+      setPickupMinimum();
+      showMessage("bookingMessage", "Account created. Enter your contact phone number to book.", "ok");
       loadRides();
     } else {
-      $("otpPanel").classList.remove("hidden");
-      message("authMessage",
-        "Registration started. Enter the SMS code sent to " + phone +
-        " to verify your phone and activate your account.",
-        "ok");
+      showMode("login");
+      $("email").value = email;
+      showMessage("authMessage", "Registration submitted. Check your email for a confirmation link if requested. Then log in here.", "ok");
     }
   } catch (e) {
-    message("authMessage", e.message || "Registration failed.", "err");
+    showMessage("authMessage", e.message || "Registration failed.", "err");
   } finally {
-    setBusy("registerBtn", false, "", "Create Passenger Account");
-  }
-});
-
-$("verifyBtn").addEventListener("click", async () => {
-  clearMessage("authMessage");
-  const token = $("otp").value.trim();
-  if (!pendingPhone || !token) {
-    message("authMessage", "Enter the SMS verification code first.", "err");
-    return;
-  }
-
-  setBusy("verifyBtn", true, "Verifying...", "Verify Phone & Continue");
-  try {
-    const { data, error } = await supabaseClient.auth.verifyOtp({
-      phone: pendingPhone,
-      token,
-      type: "sms"
-    });
-    if (error) throw error;
-    currentUser = data.user || (data.session && data.session.user) || null;
-    if (!currentUser) throw new Error("Verification succeeded, but no active session was returned. Please log in.");
-    renderUI();
-    setMinimumPickupTime();
-    message("bookingMessage", "Phone verified. You can now book a ride.", "ok");
-    loadRides();
-  } catch (e) {
-    message("authMessage", e.message || "Phone verification failed.", "err");
-  } finally {
-    setBusy("verifyBtn", false, "", "Verify Phone & Continue");
+    busy("registerBtn", false, "", "Create Passenger Account");
   }
 });
 
 $("loginBtn").addEventListener("click", async () => {
   clearMessage("authMessage");
-  setBusy("loginBtn", true, "Logging in...", "Log In");
+  busy("loginBtn", true, "Logging in...", "Log In");
   try {
-    const phone = normalizePhone($("phone").value);
+    const email = validEmail();
     const password = $("password").value;
     if (!password) throw new Error("Enter your password.");
-
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      phone,
-      password
-    });
+    const {data, error} = await db.auth.signInWithPassword({email, password});
     if (error) throw error;
-
     currentUser = data.user;
-    renderUI();
-    setMinimumPickupTime();
+    render();
+    setPickupMinimum();
     loadRides();
   } catch (e) {
-    message("authMessage", e.message || "Login failed.", "err");
+    showMessage("authMessage", e.message || "Login failed.", "err");
   } finally {
-    setBusy("loginBtn", false, "", "Log In");
+    busy("loginBtn", false, "", "Log In");
   }
 });
 
 $("logoutBtn").addEventListener("click", async () => {
-  const { error } = await supabaseClient.auth.signOut();
+  const {error} = await db.auth.signOut();
   if (error) {
-    message("bookingMessage", error.message, "err");
+    showMessage("bookingMessage", error.message, "err");
     return;
   }
   currentUser = null;
-  renderUI();
-  showAuthMode("login");
+  render();
   $("password").value = "";
+  showMode("login");
 });
 
 $("bookingForm").addEventListener("submit", async event => {
   event.preventDefault();
   clearMessage("bookingMessage");
-
   if (!currentUser) {
-    renderUI();
-    message("authMessage", "Please log in before booking a ride.", "err");
+    showMessage("authMessage", "Please log in before booking.", "err");
     return;
   }
 
   const name = $("passengerName").value.trim();
+  let phone;
+  try {
+    phone = validNepaliPhone($("passengerPhone").value);
+  } catch (e) {
+    showMessage("bookingMessage", e.message, "err");
+    return;
+  }
+
   const pickup = $("pickup").value.trim();
   const destination = $("destination").value.trim();
   const pickupTime = $("pickupTime").value;
   const paymentMethod = $("paymentMethod").value;
 
   if (!name || !pickup || !destination || !pickupTime) {
-    message("bookingMessage", "Complete all required fields.", "err");
+    showMessage("bookingMessage", "Complete all required fields.", "err");
     return;
   }
   if (pickup.toLowerCase() === destination.toLowerCase()) {
-    message("bookingMessage", "Pickup and destination cannot be the same.", "err");
+    showMessage("bookingMessage", "Pickup and destination cannot be the same.", "err");
     return;
   }
   if (new Date(pickupTime).getTime() < Date.now() - 60000) {
-    message("bookingMessage", "Choose a current or future pickup time.", "err");
+    showMessage("bookingMessage", "Choose a current or future pickup time.", "err");
     return;
   }
 
-  setBusy("bookBtn", true, "Submitting...", "Confirm Booking");
+  busy("bookBtn", true, "Submitting...", "Confirm Booking");
   try {
     const booking = {
       passenger_id: currentUser.id,
       passenger_name: name,
-      passenger_phone: currentUser.phone,
+      passenger_phone: phone,
       pickup,
       destination,
       pickup_time: new Date(pickupTime).toISOString(),
@@ -361,75 +300,56 @@ $("bookingForm").addEventListener("submit", async event => {
       fare: DEFAULT_FARE,
       status: "pending"
     };
-
-    const { error } = await supabaseClient.from("bookings").insert([booking]);
+    const {error} = await db.from("bookings").insert([booking]);
     if (error) throw error;
 
     $("pickup").value = "";
     $("destination").value = "";
-    setMinimumPickupTime();
-
-    message("bookingMessage",
-      "Booking submitted successfully. It is pending until MaliSafari accepts it. " +
-      (paymentMethod === "eSewa"
-        ? "This form does not verify eSewa payment."
-        : "Confirm the final fare with MaliSafari."),
+    setPickupMinimum();
+    showMessage("bookingMessage",
+      "Booking submitted successfully. Your ride is pending until MaliSafari accepts it.",
       "ok");
     await loadRides();
   } catch (e) {
-    console.error("Booking error:", e);
-    message("bookingMessage",
-      "Booking failed: " + (e.message || "Unknown error") +
-      ". Check that the SQL setup completed successfully.",
-      "err");
+    showMessage("bookingMessage", "Booking failed: " + (e.message || "Unknown error") + ". Check the database setup.", "err");
   } finally {
-    setBusy("bookBtn", false, "", "Confirm Booking");
+    busy("bookBtn", false, "", "Confirm Booking");
   }
 });
 
 function formatDate(value) {
   if (!value) return "Not specified";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
 }
-
 async function loadRides() {
   if (!currentUser) return;
-
   $("ridesList").textContent = "Loading rides...";
   clearMessage("ridesMessage");
-
   try {
-    const { data, error } = await supabaseClient
-      .from("bookings")
+    const {data, error} = await db.from("bookings")
       .select("booking_id, pickup, destination, pickup_time, fare, status, payment_method, payment_status, created_at")
       .eq("passenger_id", currentUser.id)
-      .order("created_at", { ascending: false })
+      .order("created_at", {ascending:false})
       .limit(30);
-
     if (error) throw error;
 
     const list = $("ridesList");
     list.replaceChildren();
-
     if (!data || data.length === 0) {
       list.textContent = "No rides booked on this account yet.";
       return;
     }
-
     data.forEach(ride => {
       const item = document.createElement("div");
       item.className = "ride";
-
       const title = document.createElement("strong");
       title.textContent = (ride.pickup || "Pickup") + " → " + (ride.destination || "Destination");
       item.appendChild(title);
       item.appendChild(document.createElement("br"));
 
       const details = document.createElement("span");
-      details.textContent =
-        "Pickup time: " + formatDate(ride.pickup_time) +
-        " | Fare: Rs. " + (ride.fare ?? DEFAULT_FARE);
+      details.textContent = "Pickup time: " + formatDate(ride.pickup_time) + " | Fare: Rs. " + (ride.fare ?? DEFAULT_FARE);
       item.appendChild(details);
       item.appendChild(document.createElement("br"));
 
@@ -439,24 +359,20 @@ async function loadRides() {
       item.appendChild(status);
 
       const payment = document.createElement("div");
-      payment.textContent = "Payment: " + (ride.payment_method || "—") +
-        " · " + (ride.payment_status || "pending");
+      payment.textContent = "Payment: " + (ride.payment_method || "—") + " · " + (ride.payment_status || "pending");
       item.appendChild(payment);
       list.appendChild(item);
     });
   } catch (e) {
     $("ridesList").textContent = "";
-    message("ridesMessage",
-      "Could not load rides: " + (e.message || "Unknown error"),
-      "err");
+    showMessage("ridesMessage", "Could not load rides: " + (e.message || "Unknown error"), "err");
   }
 }
-
 $("refreshBtn").addEventListener("click", loadRides);
 
-showAuthMode("login");
-setMinimumPickupTime();
-syncSession();
+showMode("login");
+setPickupMinimum();
+loadSession();
 </script>
 </body>
 </html>
