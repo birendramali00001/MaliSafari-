@@ -3,111 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="theme-color" content="#087a45">
 <title>MaliSafari | E-Rickshaw Booking</title>
 
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f7f5;
+  color:#17201b;
 }
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f7f5;
-  color: #17201b;
+header{
+  background:linear-gradient(135deg,#065f36,#0b9b59);
+  color:white;
+  text-align:center;
+  padding:30px 15px;
 }
-
-header {
-  background: #087a45;
-  color: white;
-  text-align: center;
-  padding: 28px 15px;
+header h1{margin:0;font-size:34px}
+header p{margin:9px 0 0;font-size:15px}
+.container{max-width:520px;margin:24px auto;padding:0 14px}
+.card{
+  background:white;
+  padding:23px;
+  border-radius:18px;
+  box-shadow:0 5px 25px rgba(0,0,0,.08);
 }
-
-header h1 {
-  margin: 0;
-  font-size: 34px;
+h2{margin-top:0;color:#087a45}
+.intro{color:#66736c;line-height:1.6}
+.badge{
+  display:inline-block;
+  padding:7px 11px;
+  background:#e8f7ee;
+  color:#087a45;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
 }
-
-header p {
-  margin: 8px 0 0;
-  font-size: 16px;
+label{display:block;font-weight:bold;margin-top:18px;margin-bottom:7px}
+input{
+  display:block;
+  width:100%;
+  padding:14px;
+  border:1px solid #ccd5cf;
+  border-radius:10px;
+  font-size:16px;
+  background:#fff;
 }
-
-.container {
-  max-width: 520px;
-  margin: 25px auto;
-  padding: 0 15px;
+input:focus{
+  outline:2px solid #8bd5ad;
+  border-color:#087a45;
 }
-
-.card {
-  background: white;
-  padding: 24px;
-  border-radius: 18px;
-  box-shadow: 0 5px 25px rgba(0,0,0,.08);
+button{
+  width:100%;
+  padding:15px;
+  margin-top:23px;
+  background:#087a45;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
 }
-
-h2 {
-  margin-top: 0;
+button:disabled{opacity:.6;cursor:not-allowed}
+.message{
+  margin-top:15px;
+  padding:13px;
+  border-radius:10px;
+  display:none;
+  overflow-wrap:anywhere;
+  line-height:1.5;
 }
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-top: 17px;
-  margin-bottom: 7px;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  border: 1px solid #ccd5cf;
-  border-radius: 10px;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 15px;
-  margin-top: 22px;
-  background: #087a45;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 17px;
-  font-weight: bold;
-}
-
-button:disabled {
-  opacity: .6;
-}
-
-.message {
-  margin-top: 15px;
-  padding: 13px;
-  border-radius: 10px;
-  display: none;
-}
-
-.success {
-  display: block;
-  background: #e8f7ee;
-  color: #087a45;
-}
-
-.error {
-  display: block;
-  background: #ffeaea;
-  color: #a30000;
-}
-
-footer {
-  text-align: center;
-  color: #66736c;
-  padding: 25px;
-  font-size: 13px;
-}
+.success{display:block;background:#e8f7ee;color:#087a45}
+.error{display:block;background:#ffeaea;color:#a30000}
+footer{text-align:center;color:#66736c;padding:24px;font-size:13px}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -115,69 +85,91 @@ footer {
 </head>
 
 <body>
-
 <header>
   <h1>🛺 MaliSafari</h1>
   <p>Easy E-Rickshaw Booking in Biratnagar</p>
 </header>
 
-<div class="container">
+<main class="container">
+  <section class="card">
+    <span class="badge">YOUR LOCAL RIDE</span>
+    <h2>Book Your Ride</h2>
+    <p class="intro">
+      Enter your details and request a MaliSafari e-rickshaw.
+      Our team will contact you regarding your booking.
+    </p>
 
-<div class="card">
+    <form id="bookingForm">
+      <label for="passengerName">Your Name</label>
+      <input id="passengerName" name="passengerName"
+        maxlength="100" autocomplete="name"
+        placeholder="Enter your full name" required>
 
-<h2>Book Your Ride</h2>
+      <label for="passengerPhone">Phone Number</label>
+      <input id="passengerPhone" name="passengerPhone"
+        type="tel" inputmode="tel" maxlength="20"
+        autocomplete="tel" placeholder="Enter your phone number" required>
 
-<p>Enter your details and request a MaliSafari e-rickshaw.</p>
+      <label for="pickup">Pickup Point</label>
+      <input id="pickup" name="pickup" maxlength="300"
+        placeholder="Where should we pick you up?" required>
 
-<form id="bookingForm">
+      <label for="destination">Destination</label>
+      <input id="destination" name="destination" maxlength="300"
+        placeholder="Where do you want to go?" required>
 
-<label>Your Name</label>
-<input id="passengerName" required>
+      <button id="bookingButton" type="submit">
+        Request MaliSafari
+      </button>
+    </form>
 
-<label>Phone Number</label>
-<input id="passengerPhone" type="tel" inputmode="tel" required>
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+  </section>
+</main>
 
-<label>Pickup Point</label>
-<input id="pickup" required>
-
-<label>Destination</label>
-<input id="destination" required>
-
-<button id="bookingButton" type="submit">
-Request MaliSafari
-</button>
-
-</form>
-
-<div id="message" class="message"></div>
-
-</div>
-</div>
-
-<footer>
-MaliSafari • Biratnagar, Nepal
-</footer>
+<footer>MaliSafari • Biratnagar, Nepal</footer>
 
 <script>
-
-const supabaseClient = supabase.createClient(
-  MALISAFARI_SUPABASE_URL,
-  MALISAFARI_SUPABASE_KEY
-);
+"use strict";
 
 const form = document.getElementById("bookingForm");
 const button = document.getElementById("bookingButton");
 const message = document.getElementById("message");
 
-form.addEventListener("submit", async function(event) {
+let supabaseClient = null;
+let submitting = false;
 
+function showMessage(text, type) {
+  message.className = "message " + type;
+  message.textContent = text;
+}
+
+try {
+  if (
+    typeof window.supabase === "undefined" ||
+    typeof MALISAFARI_SUPABASE_URL === "undefined" ||
+    typeof MALISAFARI_SUPABASE_KEY === "undefined"
+  ) {
+    throw new Error("Supabase configuration is missing.");
+  }
+
+  supabaseClient = window.supabase.createClient(
+    MALISAFARI_SUPABASE_URL,
+    MALISAFARI_SUPABASE_KEY
+  );
+} catch (error) {
+  console.error("MaliSafari setup error:", error);
+  showMessage(
+    "Booking service is temporarily unavailable. Please contact MaliSafari.",
+    "error"
+  );
+  button.disabled = true;
+}
+
+form.addEventListener("submit", async function(event) {
   event.preventDefault();
 
-  button.disabled = true;
-  button.textContent = "Booking...";
-
-  message.className = "message";
-  message.textContent = "";
+  if (submitting || !supabaseClient) return;
 
   const booking = {
     passenger_name: document.getElementById("passengerName").value.trim(),
@@ -187,33 +179,46 @@ form.addEventListener("submit", async function(event) {
     status: "pending"
   };
 
-  const { error } = await supabaseClient
-    .from("bookings")
-    .insert([booking]);
-
-  if (error) {
-
-    console.error(error);
-
-    message.className = "message error";
-    message.textContent =
-      "Booking could not be submitted. Please try again.";
-
-  } else {
-
-    message.className = "message success";
-    message.textContent =
-      "Booking successful! MaliSafari will contact you shortly.";
-
-    form.reset();
+  if (
+    !booking.passenger_name ||
+    !booking.passenger_phone ||
+    !booking.pickup ||
+    !booking.destination
+  ) {
+    showMessage("Please complete all fields.", "error");
+    return;
   }
 
-  button.disabled = false;
-  button.textContent = "Request MaliSafari";
+  submitting = true;
+  button.disabled = true;
+  button.textContent = "Submitting Booking...";
+  message.className = "message";
+  message.textContent = "";
 
+  try {
+    const { error } = await supabaseClient
+      .from("bookings")
+      .insert([booking]);
+
+    if (error) throw error;
+
+    form.reset();
+    showMessage(
+      "Booking submitted successfully! MaliSafari will contact you shortly.",
+      "success"
+    );
+  } catch (error) {
+    console.error("Booking submission error:", error);
+    showMessage(
+      "Booking could not be submitted. Please check your connection and try again.",
+      "error"
+    );
+  } finally {
+    submitting = false;
+    button.disabled = false;
+    button.textContent = "Request MaliSafari";
+  }
 });
-
 </script>
-
 </body>
 </html>
