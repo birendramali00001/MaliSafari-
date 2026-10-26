@@ -1,213 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MaliSafari Passenger Portal</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 
 <style>
-* {
-  box-sizing: border-box;
-}
-
-:root {
-  --red: #B71C1C;
-  --dark-red: #8E0000;
-  --green: #087A45;
-  --dark-green: #006B3C;
-  --yellow: #FFEB3B;
-  --yellow-light: #FFF176;
-}
-
-html {
-  min-height: 100%;
-  background: var(--red);
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-  background: var(--red);
-  color: var(--yellow);
-}
-
-header {
-  background: var(--dark-red);
-  color: var(--yellow);
-  text-align: center;
-  padding: 22px 14px;
-  border-bottom: 4px solid var(--yellow);
-}
-
-header h1 {
-  margin: 0;
-  color: var(--yellow);
-}
-
-header p {
-  color: var(--yellow);
-  margin-bottom: 0;
-}
-
-main {
-  max-width: 760px;
-  margin: 20px auto;
-  padding: 0 14px;
-}
-
-.card {
-  background: var(--green);
-  color: var(--yellow);
-  padding: 20px;
-  border-radius: 14px;
-  margin-bottom: 16px;
-  border: 2px solid var(--yellow);
-  box-shadow: 0 4px 12px rgba(0,0,0,.22);
-}
-
-h2, h3, p, label, strong, b {
-  color: var(--yellow);
-}
-
-input,
-button {
-  width: 100%;
-  padding: 13px;
-  margin: 7px 0;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-input {
-  border: 1px solid var(--yellow);
-  background: var(--dark-green);
-  color: var(--yellow);
-  outline: none;
-}
-
-input:focus {
-  border: 2px solid var(--yellow);
-  box-shadow: 0 0 0 2px rgba(255,235,59,.2);
-}
-
-input::placeholder {
-  color: var(--yellow-light);
-  opacity: .9;
-}
-
-button {
-  background: var(--dark-green);
-  color: var(--yellow);
-  border: 2px solid var(--yellow);
-  font-weight: bold;
-  cursor: pointer;
-  transition: background .2s;
-}
-
-button:hover {
-  background: var(--dark-red);
-}
-
-button.secondary {
-  background: var(--yellow);
-  color: var(--dark-green);
-  border: 2px solid var(--yellow);
-}
-
-button.secondary:hover {
-  background: var(--yellow-light);
-}
-
-button:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.muted {
-  color: var(--yellow);
-  font-size: 14px;
-  line-height: 1.5;
-  opacity: .95;
-}
-
-.message {
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 14px;
-  overflow-wrap: anywhere;
-  background: var(--green);
-  color: var(--yellow);
-  border: 2px solid var(--yellow);
-}
-
-.ride {
-  background: var(--dark-green);
-  color: var(--yellow);
-  border: 2px solid var(--yellow);
-  padding: 15px;
-  border-radius: 10px;
-  margin: 12px 0;
-  overflow-wrap: anywhere;
-}
-
-.ride h3 {
-  margin-top: 0;
-  color: var(--yellow);
-  text-transform: capitalize;
-}
-
-.ride p {
-  color: var(--yellow);
-  line-height: 1.5;
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-top: 12px;
-}
-
-footer {
-  text-align: center;
-  padding: 20px;
-  color: var(--yellow);
-  background: var(--dark-red);
-  border-top: 2px solid var(--yellow);
-}
-
-#dashboard .card h2 {
-  border-bottom: 1px solid var(--yellow);
-  padding-bottom: 8px;
-}
-
-#rides:empty {
-  display: none;
-}
-
-@media (max-width: 480px) {
-  main {
-    margin: 14px auto;
-    padding: 0 10px;
-  }
-
-  .card {
-    padding: 15px;
-    border-radius: 12px;
-  }
-
-  header {
-    padding: 18px 10px;
-  }
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#B71C1C;color:#FFEB3B}
+header{background:#8E0000;color:#FFEB3B;text-align:center;padding:22px 14px;border-bottom:3px solid #FFEB3B}
+header h1{margin:0}
+main{max-width:760px;margin:20px auto;padding:0 14px}
+.card{background:#087A45;color:#FFEB3B;padding:20px;border:2px solid #FFEB3B;border-radius:14px;margin-bottom:16px;box-shadow:0 3px 15px #0003}
+input,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;font-size:16px}
+input{border:2px solid #FFEB3B;background:#006B3C;color:#FFEB3B}
+input::placeholder{color:#d9d49a}
+button{background:#FFEB3B;color:#8E0000;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#006B3C;color:#FFEB3B;border:1px solid #FFEB3B}
+button:disabled{opacity:.55}
+.hidden{display:none!important}
+.muted{color:#FFF59D;font-size:14px;line-height:1.5}
+.message{padding:12px;border-radius:8px;margin-bottom:14px;overflow-wrap:anywhere;background:#006B3C;color:#FFEB3B;border:1px solid #FFEB3B}
+.ride{background:#006B3C;border:1px solid #FFEB3B;padding:15px;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}
+.ride h3{margin-top:0;color:#FFEB3B}
+label{display:block;font-weight:bold;margin-top:12px;color:#FFEB3B}
+footer{text-align:center;padding:20px;color:#FFEB3B}
 </style>
 </head>
 
@@ -218,103 +37,79 @@ footer {
 </header>
 
 <main>
-  <div id="message" class="message hidden" role="status"></div>
+<div id="message" class="message hidden" role="status"></div>
 
-  <section id="authCard" class="card">
-    <h2 id="authTitle">Passenger Login</h2>
+<section id="authCard" class="card">
+  <h2 id="authTitle">Passenger Login</h2>
 
-    <p class="muted">
-      Use your registered phone number and password. No email is required.
-    </p>
+  <p class="muted">
+    Log in with your registered email address and password.
+    Your phone number is used for ride contact.
+  </p>
 
-    <form id="authForm">
-      <div id="nameWrap" class="hidden">
-        <label for="fullName">Full name</label>
-        <input id="fullName" autocomplete="name" placeholder="Your full name">
-      </div>
+  <form id="authForm">
+    <div id="nameWrap" class="hidden">
+      <label for="fullName">Full name</label>
+      <input id="fullName" autocomplete="name" placeholder="Your full name">
+    </div>
 
-      <label for="phone">Phone number</label>
-      <input
-        id="phone"
-        type="tel"
-        inputmode="tel"
-        autocomplete="tel"
-        placeholder="98XXXXXXXX"
-        required
-      >
+    <label for="email">Email address</label>
+    <input id="email" type="email" autocomplete="email"
+           placeholder="you@example.com" required>
 
-      <label for="password">Password</label>
-      <input
-        id="password"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Password (minimum 6 characters)"
-        minlength="6"
-        required
-      >
+    <div id="phoneWrap" class="hidden">
+      <label for="phone">Phone number (for ride contact)</label>
+      <input id="phone" type="tel" inputmode="tel"
+             autocomplete="tel" placeholder="98XXXXXXXX">
+    </div>
 
-      <button id="submitBtn" type="submit">Login</button>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password"
+           placeholder="Password (minimum 6 characters)"
+           minlength="6" required>
+
+    <button id="submitBtn" type="submit">Login</button>
+  </form>
+
+  <button id="registerBtn" class="secondary" type="button">
+    Create Passenger Account
+  </button>
+
+  <button id="forgotBtn" class="secondary" type="button">
+    Forgot Password? Ask Admin to Reset
+  </button>
+</section>
+
+<section id="dashboard" class="hidden">
+  <div class="card">
+    <h2 id="welcome">My Passenger Dashboard</h2>
+    <p class="muted">Your account is saved. Use the same login for future rides.</p>
+    <button id="refreshBtn" class="secondary" type="button">Refresh My Bookings</button>
+    <button id="logoutBtn" type="button">Logout</button>
+  </div>
+
+  <div class="card">
+    <h2>Book a Ride</h2>
+    <form id="bookingForm">
+      <label for="pickup">Pickup point</label>
+      <input id="pickup" required placeholder="Where should the driver pick you up?">
+
+      <label for="destination">Destination</label>
+      <input id="destination" required placeholder="Where are you going?">
+
+      <button id="bookBtn" type="submit">Request MaliSafari</button>
     </form>
+  </div>
 
-    <button id="registerBtn" class="secondary" type="button">
-      Create Passenger Account
-    </button>
-
-    <button id="forgotBtn" class="secondary" type="button">
-      Forgot Password? Ask Admin to Reset
-    </button>
-  </section>
-
-  <section id="dashboard" class="hidden">
-    <div class="card">
-      <h2 id="welcome">My Passenger Dashboard</h2>
-
-      <p class="muted">
-        Your account is saved. Use the same login for future rides.
-      </p>
-
-      <button id="refreshBtn" class="secondary" type="button">
-        Refresh My Bookings
-      </button>
-
-      <button id="logoutBtn" type="button">Logout</button>
-    </div>
-
-    <div class="card">
-      <h2>Book a Ride</h2>
-
-      <form id="bookingForm">
-        <label for="pickup">Pickup point</label>
-        <input
-          id="pickup"
-          required
-          placeholder="Where should the driver pick you up?"
-        >
-
-        <label for="destination">Destination</label>
-        <input
-          id="destination"
-          required
-          placeholder="Where are you going?"
-        >
-
-        <button id="bookBtn" type="submit">
-          Request MaliSafari
-        </button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>My Bookings &amp; Ride Tracking</h2>
-
-      <p class="muted">
-        See booking status, assigned driver, fare, payment status and
-        recorded pickup time. This is basic tracking, not live GPS.
-      </p>
-
-      <div id="rides">Loading bookings...</div>
-    </div>
-  </section>
+  <div class="card">
+    <h2>My Bookings & Ride Tracking</h2>
+    <p class="muted">
+      See booking status, assigned driver, fare, payment status and
+      recorded pickup time. This is basic tracking, not live GPS.
+    </p>
+    <div id="rides">Loading bookings...</div>
+  </div>
+</section>
 </main>
 
 <footer>MaliSafari · Biratnagar, Nepal</footer>
@@ -334,8 +129,8 @@ let busy = false;
 let currentUser = null;
 let profile = null;
 
-function say(t) {
-  $("message").textContent = t;
+function say(message) {
+  $("message").textContent = message;
   $("message").classList.remove("hidden");
 }
 
@@ -344,8 +139,8 @@ function clearSay() {
   $("message").classList.add("hidden");
 }
 
-function esc(v) {
-  return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -354,16 +149,16 @@ function esc(v) {
   }[c]));
 }
 
-function when(v) {
-  if (!v) return "Not recorded";
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? "Not recorded" : d.toLocaleString();
+function when(value) {
+  if (!value) return "Not recorded";
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? "Not recorded" : date.toLocaleString();
 }
 
-function setBusy(v) {
-  busy = v;
-  document.querySelectorAll("button").forEach(b => {
-    b.disabled = v;
+function setBusy(value) {
+  busy = value;
+  document.querySelectorAll("button").forEach(button => {
+    button.disabled = value;
   });
 }
 
@@ -375,17 +170,21 @@ function showLogin() {
 function showDashboard() {
   $("authCard").classList.add("hidden");
   $("dashboard").classList.remove("hidden");
-
-  $("welcome").textContent =
-    "Welcome, " + (profile.full_name || "Passenger");
+  $("welcome").textContent = "Welcome, " + (profile.full_name || "Passenger");
 }
 
 async function saveProfile(user, name, phone) {
   const row = {
     id: user.id,
     full_name: name || user.user_metadata?.full_name || "Passenger",
-    phone: phone || user.phone
+    phone: phone || user.user_metadata?.phone || user.phone
   };
+
+  if (!row.phone) {
+    throw new Error(
+      "Your passenger profile has no phone number. Please contact the MaliSafari admin to update it."
+    );
+  }
 
   const { error } = await db
     .from("passenger_profiles")
@@ -428,7 +227,7 @@ async function enterPortal() {
     await saveProfile(
       currentUser,
       currentUser.user_metadata?.full_name,
-      currentUser.phone
+      currentUser.user_metadata?.phone
     );
   }
 
@@ -436,8 +235,9 @@ async function enterPortal() {
   await loadRides();
 }
 
-$("authForm").addEventListener("submit", async ev => {
-  ev.preventDefault();
+/* EMAIL + PASSWORD LOGIN AND REGISTRATION */
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
   if (busy) return;
 
@@ -445,25 +245,29 @@ $("authForm").addEventListener("submit", async ev => {
   setBusy(true);
 
   try {
-    const phone = $("phone").value.trim();
+    const email = $("email").value.trim().toLowerCase();
     const password = $("password").value;
+    const phone = $("phone").value.trim();
 
-    if (!/^\+?[0-9 ()-]{7,20}$/.test(phone)) {
-      throw new Error("Enter a valid phone number.");
-    }
+    if (!email) throw new Error("Enter your email address.");
 
     if (registering) {
       const name = $("fullName").value.trim();
 
-      if (!name) {
-        throw new Error("Enter your full name.");
+      if (!name) throw new Error("Enter your full name.");
+
+      if (!/^\+?[0-9 ()-]{7,20}$/.test(phone)) {
+        throw new Error("Enter a valid phone number for ride contact.");
       }
 
       const { data, error } = await db.auth.signUp({
-        phone,
+        email,
         password,
         options: {
-          data: { full_name: name }
+          data: {
+            full_name: name,
+            phone: phone
+          }
         }
       });
 
@@ -477,14 +281,13 @@ $("authForm").addEventListener("submit", async ev => {
         say("Passenger account created successfully.");
       } else {
         say(
-          "Registration submitted. If phone confirmation is enabled " +
-          "in Supabase, complete SMS verification before logging in. " +
-          "Phone authentication must be enabled in Supabase."
+          "Registration submitted. Check your email for a confirmation link, " +
+          "then return here and log in with your email and password."
         );
       }
     } else {
       const { error } = await db.auth.signInWithPassword({
-        phone,
+        email,
         password
       });
 
@@ -493,14 +296,15 @@ $("authForm").addEventListener("submit", async ev => {
       await enterPortal();
       say("Login successful.");
     }
-  } catch (e) {
-    console.error(e);
-    say(e.message || "Could not complete the request.");
+  } catch (error) {
+    console.error(error);
+    say(error.message || "Could not complete the request.");
   } finally {
     setBusy(false);
   }
 });
 
+/* SWITCH BETWEEN LOGIN AND REGISTRATION */
 $("registerBtn").addEventListener("click", () => {
   registering = !registering;
 
@@ -511,7 +315,10 @@ $("registerBtn").addEventListener("click", () => {
   $("submitBtn").textContent = registering ? "Register" : "Login";
 
   $("nameWrap").classList.toggle("hidden", !registering);
+  $("phoneWrap").classList.toggle("hidden", !registering);
+
   $("fullName").required = registering;
+  $("phone").required = registering;
 
   $("password").autocomplete = registering
     ? "new-password"
@@ -524,15 +331,20 @@ $("registerBtn").addEventListener("click", () => {
   clearSay();
 });
 
+/* PASSWORD RESET REQUEST FOR ADMIN */
 $("forgotBtn").addEventListener("click", async () => {
   if (busy) return;
 
-  const phone = $("phone").value.trim();
+  const phone = window.prompt(
+    "Enter the phone number registered to your passenger account so the MaliSafari admin can verify your reset request:"
+  );
 
-  if (!phone) {
-    say(
-      "Enter the phone number registered to your passenger account first."
-    );
+  if (phone === null) return;
+
+  const cleanPhone = phone.trim();
+
+  if (!/^\+?[0-9 ()-]{7,20}$/.test(cleanPhone)) {
+    say("Enter a valid registered phone number.");
     return;
   }
 
@@ -542,10 +354,7 @@ $("forgotBtn").addEventListener("click", async () => {
     const { error } = await db
       .from("passenger_password_reset_requests")
       .insert({
-        phone,
-        full_name: registering
-          ? $("fullName").value.trim() || null
-          : null,
+        phone: cleanPhone,
         status: "pending"
       });
 
@@ -558,19 +367,19 @@ $("forgotBtn").addEventListener("click", async () => {
     if (error) throw error;
 
     say(
-      "Password-reset request submitted. The admin must verify your " +
-      "identity and reset your password securely."
+      "Password-reset request submitted. The MaliSafari admin must verify your identity and reset your password."
     );
-  } catch (e) {
-    console.error(e);
-    say(e.message || "Could not submit the reset request.");
+  } catch (error) {
+    console.error(error);
+    say(error.message || "Could not submit the reset request.");
   } finally {
     setBusy(false);
   }
 });
 
-$("bookingForm").addEventListener("submit", async ev => {
-  ev.preventDefault();
+/* BOOK A RIDE */
+$("bookingForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
   if (busy) return;
 
@@ -591,28 +400,22 @@ $("bookingForm").addEventListener("submit", async ev => {
       status: "pending"
     };
 
-    const { error } = await db
-      .from("bookings")
-      .insert(booking);
+    const { error } = await db.from("bookings").insert(booking);
 
     if (error) throw error;
 
     $("bookingForm").reset();
-
     say("Booking successful! Your booking is now in My Bookings.");
-
     await loadRides();
-  } catch (e) {
-    console.error(e);
-    say(
-      "Booking could not be submitted: " +
-      (e.message || "Please try again.")
-    );
+  } catch (error) {
+    console.error(error);
+    say("Booking could not be submitted: " + (error.message || "Please try again."));
   } finally {
     setBusy(false);
   }
 });
 
+/* LOAD PASSENGER BOOKINGS */
 $("refreshBtn").addEventListener("click", loadRides);
 
 async function loadRides() {
@@ -635,39 +438,26 @@ async function loadRides() {
     return;
   }
 
-  $("rides").innerHTML = rows.map(r =>
+  $("rides").innerHTML = rows.map(ride =>
     '<div class="ride">' +
-      '<h3>Ride · ' + esc(r.status || "pending") + '</h3>' +
-      '<p><b>Pickup:</b> ' + esc(r.pickup) + '</p>' +
-      '<p><b>Destination:</b> ' + esc(r.destination) + '</p>' +
+      '<h3>Ride · ' + esc(ride.status || "pending") + '</h3>' +
+      '<p><b>Pickup:</b> ' + esc(ride.pickup) + '</p>' +
+      '<p><b>Destination:</b> ' + esc(ride.destination) + '</p>' +
       '<p><b>Fare:</b> ' +
-        (r.fare == null ? "Not set" : "Rs. " + esc(r.fare)) +
+        (ride.fare == null ? "Not set" : "Rs. " + esc(ride.fare)) +
       '</p>' +
-      '<p><b>Driver:</b> ' +
-        esc(r.driver_name || "Not assigned yet") +
-      '</p>' +
-      '<p><b>Driver phone:</b> ' +
-        esc(r.driver_phone || "Not assigned yet") +
-      '</p>' +
-      '<p><b>Payment method:</b> ' +
-        esc(r.payment_method || "Not recorded") +
-      '</p>' +
-      '<p><b>Payment status:</b> ' +
-        esc(r.payment_status || "Pending") +
-      '</p>' +
-      '<p><b>Pickup time:</b> ' +
-        esc(when(r.pickup_time)) +
-      '</p>' +
-      '<p><b>Completed:</b> ' +
-        esc(when(r.completed_at)) +
-      '</p>' +
-      '<p class="muted">Requested: ' +
-        esc(when(r.created_at)) +
-      '</p>' +
+      '<p><b>Driver:</b> ' + esc(ride.driver_name || "Not assigned yet") + '</p>' +
+      '<p><b>Driver phone:</b> ' + esc(ride.driver_phone || "Not assigned yet") + '</p>' +
+      '<p><b>Payment method:</b> ' + esc(ride.payment_method || "Not recorded") + '</p>' +
+      '<p><b>Payment status:</b> ' + esc(ride.payment_status || "Pending") + '</p>' +
+      '<p><b>Pickup time:</b> ' + esc(when(ride.pickup_time)) + '</p>' +
+      '<p><b>Completed:</b> ' + esc(when(ride.completed_at)) + '</p>' +
+      '<p class="muted">Requested: ' + esc(when(ride.created_at)) + '</p>' +
     '</div>'
   ).join("");
 }
 
+/* LOGOUT */
 $("logoutBtn").addEventListener("click", async () => {
   if (busy) return;
 
@@ -680,25 +470,23 @@ $("logoutBtn").addEventListener("click", async () => {
 
     currentUser = null;
     profile = null;
-
     showLogin();
     say("You have logged out.");
-  } catch (e) {
-    say(e.message || "Logout failed.");
+  } catch (error) {
+    say(error.message || "Logout failed.");
   } finally {
     setBusy(false);
   }
 });
 
+/* AUTOMATIC BOOKING REFRESH */
 setInterval(() => {
-  if (
-    !$("dashboard").classList.contains("hidden") &&
-    !busy
-  ) {
+  if (!$("dashboard").classList.contains("hidden") && !busy) {
     loadRides();
   }
 }, 30000);
 
+/* RESTORE AN EXISTING LOGIN */
 (async () => {
   try {
     const { data } = await db.auth.getSession();
@@ -706,12 +494,10 @@ setInterval(() => {
     if (data.session) {
       await enterPortal();
     }
-  } catch (e) {
-    console.error(e);
-
+  } catch (error) {
+    console.error(error);
     say(
-      "Passenger portal setup is incomplete. Run the passenger " +
-      "setup SQL in Supabase, then reload this page."
+      "Passenger portal setup is incomplete. Run the passenger setup SQL in Supabase, then reload this page."
     );
   }
 })();
